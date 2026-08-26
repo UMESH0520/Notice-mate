@@ -1,0 +1,60 @@
+# .gitignore for the NoticeMate repository
+#
+# See https://github.com/github/gitignore/blob/main/Node.gitignore for the canonical list
+# and https://github.com/github/gitignore/blob/main/Python.gitignore for Python specifics.
+
+# --- General OS files ---
+.DS_Store
+Thumbs.db
+
+# --- Node & npm ---
+node_modules/
+npm-debug.log*
+yarn-error.log*
+yarn.lock
+package-lock.json
+.pnpm-debug.logfile
+
+# --- Environment files ---
+.env
+.env.local
+.env.*.local
+
+# --- Build artifacts ---
+dist/
+build/
+out/
+.next/
+.vscode/
+.idea/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+# .env files are ignored via the above pattern but keep this for clarity
+.env
+.env.*
+
+# --- VS Code & IDE ---
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# --- Python virtual environments ---
+venv/
+env/
+ENV/
+.venv/
+
+# --- Logs ---
+*.log
+
+# --- OS generated files ---
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- Data ---
+*.sqlite3
+*.db
