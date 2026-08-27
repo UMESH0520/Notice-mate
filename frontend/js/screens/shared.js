@@ -23,7 +23,12 @@ export function friendlyError(err) {
   if (err instanceof ApiError) {
     if (err.offline) return t('error.offline');
     if (err.status === 404) return t('error.noNotice');
-    if (err.message && err.message !== 'request_failed') return err.message;
+    if (err.status === 502 || err.status === 503 || err.status === 504) {
+      return 'The server is temporarily busy or waking up. Please click Try Again in a few seconds.';
+    }
+    if (err.message && err.message !== 'request_failed' && !err.message.trim().startsWith('<')) {
+      return err.message;
+    }
   }
   return t('error.generic');
 }

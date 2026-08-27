@@ -186,14 +186,27 @@ def _extract_image(content: bytes, ext: str) -> ExtractedInput:
     mime = _MIME.get(ext, "image/png")
     extracted_text = ""
     try:
+        # Resize large images to max 1200px to protect against RAM spikes on 512MB cloud instances
+        from PIL import Image
+        img = Image.open(io.BytesIO(content))
+        w, h = img.size
+        if max(w, h) > 1200:
+            scale = 1200 / max(w, h)
+            img = img.resize((int(w * scale), int(h * scale)), Image.Resampling.BILINEAR)
+            buf = io.BytesIO()
+            img.convert("RGB").save(buf, format="JPEG", quality=85)
+            ocr_bytes = buf.getvalue()
+        else:
+            ocr_bytes = content
+
         ocr = get_ocr_engine()
         if ocr is not None:
-            result, _ = ocr(content)
+            result, _ = ocr(ocr_bytes)
             if result:
                 lines = [line[1] for line in result if line and len(line) > 1 and line[1].strip()]
                 extracted_text = "\n".join(lines)
     except BaseException as exc:
-        logger.warning("Local OCR extraction failed: %s", exc)
+        logger.warning("Local OCR extraction bypassed: %s", exc)
 
     return ExtractedInput(
         text=extracted_text,
