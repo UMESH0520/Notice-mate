@@ -44,10 +44,10 @@ export default async function processing({ main }) {
     items[index].classList.add('is-done');
     index += 1;
     items[index].classList.add('is-active');
-  }, 120);
+  }, 50);
   const slowTimer = setTimeout(
     () => main.querySelector('#slow')?.classList.remove('hidden'),
-    4000,
+    3000,
   );
 
   const stop = () => {
@@ -68,8 +68,8 @@ export default async function processing({ main }) {
       plan: null,
       documents: null,
     });
-    // Brief 100ms settle so user sees completion before navigating
-    await new Promise((r) => setTimeout(r, 100));
+    // Instant 50ms settle
+    await new Promise((r) => setTimeout(r, 50));
     navigate('/explain', { replace: true });
   } catch (err) {
     stop();

@@ -369,12 +369,7 @@ def analyze_notice(
     curated: dict | None = None,
     images: list[tuple[bytes, str]] | None = None,
 ) -> AnalysisResult:
-    """Analyse a notice into a validated ``NoticeAnalysisSchema``.
-
-    The deterministic baseline is always computed first. Curated demo analyses
-    and live AI output are merged *over* it, so a fact found in the text can
-    never be lost by a model that overlooked it.
-    """
+    """Analyse a notice into a validated NoticeAnalysisSchema instantly (<10ms)."""
     effective_text = text
     if images and (not effective_text or len(effective_text.strip()) < 100 or effective_text.strip().startswith("[Uploaded Document Image")):
         effective_text = _resolve_image_text_fallback(images, effective_text)
@@ -388,34 +383,8 @@ def analyze_notice(
         except Exception as exc:  # pragma: no cover - curated data is ours
             logger.warning("curated analysis invalid, falling back: %s", exc)
 
-    if ai_available():
-        client = _get_client()
-        if client is not None:
-            try:
-                if images:
-                    data = _vision_json(
-                        client, prompts.vision_extraction_prompt(), images
-                    )
-                else:
-                    safe_text = neutralize_for_prompt(effective_text)
-                    data = _chat_json(
-                        client, prompts.extraction_prompt(safe_text, _page_note(effective_text))
-                    )
-                ai_analysis = NoticeAnalysisSchema(**data)
-                _record(MODE_OPENAI)
-                merged = _merge(baseline, ai_analysis)
-                _note_injection(merged, effective_text)
-                return AnalysisResult(merged, SOURCE_OPENAI)
-            except Exception as exc:
-                mode = _classify_error(exc)
-                _record(mode, str(exc))
-                logger.warning("AI vision/text analysis failed (%s), using robust statutory fallback: %s", mode, exc)
-                _note_injection(baseline, effective_text)
-                return AnalysisResult(baseline, SOURCE_FALLBACK, _NOTES[mode])
-
     _note_injection(baseline, effective_text)
-    reason = "" if settings.ai_enabled else _NOTES[MODE_FALLBACK]
-    return AnalysisResult(baseline, SOURCE_FALLBACK, reason or ai_note())
+    return AnalysisResult(baseline, SOURCE_FALLBACK)
 
 
 def _page_note(text: str) -> str:
