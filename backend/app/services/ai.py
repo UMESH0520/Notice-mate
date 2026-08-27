@@ -168,16 +168,17 @@ def _get_client():
         return None
 
     try:
+        req_timeout = min(float(getattr(settings, "OPENAI_TIMEOUT", 12.0)), 12.0)
         if _is_gemini_key():
             return OpenAI(
                 api_key=settings.OPENAI_API_KEY.strip(),
                 base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-                timeout=settings.OPENAI_TIMEOUT,
-                max_retries=1,
+                timeout=req_timeout,
+                max_retries=0,
             )
         return OpenAI(
             api_key=settings.OPENAI_API_KEY,
-            timeout=settings.OPENAI_TIMEOUT,
+            timeout=req_timeout,
             max_retries=0,
         )
     except Exception as exc:  # pragma: no cover

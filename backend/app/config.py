@@ -60,7 +60,7 @@ class Settings(BaseSettings):
         alias="OPENAI_VISION_MODEL",
         description="multimodal model used to read notice images; defaults to OPENAI_MODEL",
     )
-    OPENAI_TIMEOUT: float = Field(45.0, description="OpenAI request timeout (s)")
+    OPENAI_TIMEOUT: float = Field(12.0, description="OpenAI request timeout (s)")
     OPENAI_RESEARCH_TIMEOUT: float = Field(
         90.0, description="OpenAI web-research timeout (s) — searching is slower"
     )
