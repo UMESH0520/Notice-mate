@@ -7,6 +7,7 @@ import { t } from '../i18n.js?v=10';
 import { icon, categoryIcon } from '../icons.js?v=10';
 import {
   alert,
+  badge,
   button,
   esc,
   emptyState,
