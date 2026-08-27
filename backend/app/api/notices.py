@@ -80,12 +80,22 @@ async def upload_notice(
     )
 
     # Save uploaded file bytes to UPLOAD_DIR
+    images = None
     try:
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
         file_path = UPLOAD_DIR / f"{notice.id}_{filename}"
         file_path.write_bytes(content)
+        if ext in extraction.IMAGE_EXTS:
+            mime = extraction._MIME.get(ext, "image/png")
+            images = [(content, mime)]
     except Exception as exc:
         logger.warning("Failed to save uploaded file: %s", exc)
+
+    # Pre-analyze immediately (<40ms)
+    try:
+        notice_svc.analyze(db, notice, language="en", images=images)
+    except Exception as exc:
+        logger.warning("Pre-analysis on upload warning: %s", exc)
 
     if note:
         workflow.log_event(db, notice, "note", note)
@@ -101,6 +111,7 @@ def create_demo_notice(
     """Create a notice from a seeded synthetic demo notice."""
     try:
         notice = notice_svc.create_from_demo(db, body.demo_id, body.session_id)
+        notice_svc.analyze(db, notice, language="en")
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Unknown demo notice.") from exc
     return NoticeOut.model_validate(notice)
@@ -115,6 +126,10 @@ def create_text_notice(
     notice = notice_svc.create_from_text(
         db, text=body.text, filename=filename, session_id=body.session_id, source="text"
     )
+    try:
+        notice_svc.analyze(db, notice, language="en")
+    except Exception as exc:
+        logger.warning("Pre-analysis on text notice warning: %s", exc)
     return NoticeOut.model_validate(notice)
 
 
@@ -127,6 +142,9 @@ def analyze_notice(
 ) -> AnalysisOut:
     notice = get_notice_or_404(db, notice_id)
     language = _lang(body.language if body else "en")
+
+    if notice.analysis is not None:
+        return notice_svc.localized_analysis(notice, language)
 
     images = None
     if notice.original_filename:
