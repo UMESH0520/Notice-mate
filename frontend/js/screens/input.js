@@ -1,10 +1,10 @@
 /** Screen 2 — Notice input: sample notice, file upload, or pasted text. */
 
-import api from '../api.js?v=10';
-import { navigate } from '../router.js?v=10';
-import { state, setState, resetNotice } from '../state.js?v=10';
-import { t } from '../i18n.js?v=10';
-import { icon, categoryIcon } from '../icons.js?v=10';
+import api from '../api.js';
+import { navigate } from '../router.js';
+import { state, setState, resetNotice } from '../state.js';
+import { t } from '../i18n.js';
+import { icon, categoryIcon } from '../icons.js';
 import {
   alert,
   badge,
@@ -17,8 +17,8 @@ import {
   screenHead,
   setBusy,
   spinner,
-} from '../ui.js?v=10';
-import { friendlyError, showError } from './shared.js?v=10';
+} from '../ui.js';
+import { friendlyError, showError } from './shared.js';
 
 const TABS = [
   ['demo', 'input.tabDemo', 'eye'],
