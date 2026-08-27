@@ -174,8 +174,8 @@ def get_ocr_engine():
         try:
             from rapidocr_onnxruntime import RapidOCR
             _OCR_INSTANCE = RapidOCR()
-        except Exception as exc:
-            logger.info("RapidOCR initialization failed: %s", exc)
+        except BaseException as exc:
+            logger.warning("RapidOCR initialization failed or library missing: %s", exc)
             return None
     return _OCR_INSTANCE
 
@@ -192,8 +192,8 @@ def _extract_image(content: bytes, ext: str) -> ExtractedInput:
             if result:
                 lines = [line[1] for line in result if line and len(line) > 1 and line[1].strip()]
                 extracted_text = "\n".join(lines)
-    except Exception as exc:
-        logger.info("Local OCR extraction failed: %s", exc)
+    except BaseException as exc:
+        logger.warning("Local OCR extraction failed: %s", exc)
 
     return ExtractedInput(
         text=extracted_text,
