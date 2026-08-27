@@ -73,12 +73,16 @@ export default async function processing({ main }) {
     navigate('/explain', { replace: true });
   } catch (err) {
     stop();
+    const isNotFound = err?.status === 404;
+    if (isNotFound) {
+      import('../state.js').then(({ resetNotice }) => resetNotice());
+    }
     main.innerHTML = `<section class="screen">
       ${errorState(friendlyError(err))}
-      <div class="actions">
+      <div class="actions" style="margin-top: 1rem">
         ${button({
-          label: t('common.startOver'),
-          variant: 'ghost',
+          label: isNotFound ? 'Upload Notice' : t('common.startOver'),
+          variant: 'primary',
           attrs: 'data-restart',
         })}
       </div>
