@@ -410,6 +410,97 @@ function howOutputCameExplanationCard(analysis, notice) {
   </div>`;
 }
 
+function noticeTimelineCard(analysis, notice) {
+  const deadlineVal = (analysis.deadline || '').trim();
+  const days = daysUntil(deadlineVal);
+
+  const importantDates = notice?.important_dates || [];
+  const issueDateObj = importantDates.find((d) =>
+    (d.label || '').toLowerCase().includes('issue') ||
+    (d.label || '').toLowerCase().includes('notice date') ||
+    (d.label || '').toLowerCase().includes('date of notice')
+  );
+  const issueDate = issueDateObj
+    ? issueDateObj.value
+    : (analysis.notice_date || 'Extracted from notice header');
+
+  let statusBadge = '';
+  let statusText = '';
+  let alertVariant = 'info';
+
+  if (days !== null) {
+    if (days < 0) {
+      statusBadge = badge(`🚨 OVERDUE (${Math.abs(days)} DAYS PAST)`, 'danger', true);
+      statusText = `The submission/compliance deadline was ${deadlineVal}. The deadline has passed — check for extension or penalty clauses immediately.`;
+      alertVariant = 'danger';
+    } else if (days === 0) {
+      statusBadge = badge('⚠️ DUE TODAY', 'warn', true);
+      statusText = `Today is the final day to submit your response or complete required action!`;
+      alertVariant = 'warn';
+    } else {
+      statusBadge = badge(
+        `⏳ ${days} DAY${days === 1 ? '' : 'S'} REMAINING`,
+        days <= 7 ? 'warn' : 'success',
+        true,
+      );
+      statusText = `You have ${days} day(s) left before the submission deadline (${deadlineVal}).`;
+      alertVariant = days <= 7 ? 'warn' : 'success';
+    }
+  } else if (deadlineVal) {
+    const isImmediate =
+      deadlineVal.toLowerCase().includes('immediate') ||
+      deadlineVal.toLowerCase().includes('earliest');
+    statusBadge = badge(
+      isImmediate ? '🚨 IMMEDIATE ACTION' : '⏰ DEADLINE SPECIFIED',
+      isImmediate ? 'danger' : 'brand',
+      true,
+    );
+    statusText = `Specified Deadline: ${deadlineVal}. Follow the action plan to comply without delay.`;
+    alertVariant = isImmediate ? 'danger' : 'info';
+  } else {
+    statusBadge = badge('ℹ️ NO EXPLICIT DEADLINE', 'muted', true);
+    statusText =
+      'No explicit calendar deadline was found in the text. Standard statutory response timelines apply.';
+  }
+
+  return `<div class="card card--flat" style="border:1px solid var(--border);border-radius:14px;background:var(--bg-surface);padding:1.25rem;margin-bottom:1rem">
+    <div class="row-between" style="margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem">
+      <strong style="font-size:1.05rem;color:var(--brand);display:flex;align-items:center;gap:0.4rem">
+        ${icon('calendar', 20)} Notice Dates & Deadline Status
+      </strong>
+      ${statusBadge}
+    </div>
+
+    <div class="grid grid--2" style="gap:0.8rem;margin-bottom:0.9rem">
+      <div style="background:var(--bg-subtle);padding:0.85rem 1rem;border-radius:10px;border:1px solid var(--border-light)">
+        <span class="small muted" style="text-transform:uppercase;letter-spacing:0.5px;font-weight:600;display:block">📅 Notice Date / Issued</span>
+        <strong style="font-size:1.05rem;color:var(--text);display:block;margin-top:0.2rem">${esc(issueDate)}</strong>
+        <span class="small muted" style="font-size:0.82rem;display:block;margin-top:0.15rem">Date notice was issued or received</span>
+      </div>
+
+      <div style="background:var(--bg-subtle);padding:0.85rem 1rem;border-radius:10px;border:1px solid var(--border-light)">
+        <span class="small muted" style="text-transform:uppercase;letter-spacing:0.5px;font-weight:600;display:block">⏰ Submission / Cut-off Deadline</span>
+        <strong style="font-size:1.05rem;color:${days !== null && days < 0 ? 'var(--danger)' : 'var(--brand)'};display:block;margin-top:0.2rem">${esc(deadlineVal || 'Not Specified')}</strong>
+        <span class="small muted" style="font-size:0.82rem;display:block;margin-top:0.15rem">Target date to submit or respond</span>
+      </div>
+    </div>
+
+    <div class="alert alert--${alertVariant}" style="font-size:0.92rem;line-height:1.5">
+      <strong>Timeline Status:</strong> ${esc(statusText)}
+    </div>
+
+    ${importantDates.length ? `<div style="margin-top:0.9rem;padding-top:0.8rem;border-top:1px dashed var(--border)">
+      <strong class="small muted" style="text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:0.5rem">Extracted Notice Milestones & Dates:</strong>
+      <div class="stack stack--sm">
+        ${importantDates.map((d) => `<div class="row-between" style="font-size:0.9rem;padding:0.35rem 0.6rem;background:var(--bg-subtle);border-radius:6px">
+          <span><strong>${esc(d.label)}:</strong> ${esc(d.value)} ${d.note ? `<span class="muted">(${esc(d.note)})</span>` : ''}</span>
+          ${d.trust === 'OFFICIAL_SOURCE' ? badge('Verified', 'success') : ''}
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+  </div>`;
+}
+
 export default async function explain({ main }) {
   if (!requireNotice()) return;
 
@@ -435,6 +526,7 @@ export default async function explain({ main }) {
         <div class="stack">
           ${directOfficialPortalBanner(a)}
           ${howOutputCameExplanationCard(a, notice)}
+          ${noticeTimelineCard(a, notice)}
           ${signatureNextStepsCard(a, notice)}
           ${deadlineBlock(a)}
 
