@@ -245,7 +245,25 @@ function renderUpload(panel) {
     chip.querySelector('[data-clear]')?.addEventListener('click', () => setFile(null));
   };
 
-  fileInput.addEventListener('change', () => setFile(fileInput.files?.[0]));
+  const startUpload = async (file) => {
+    if (!file) return;
+    setFile(file);
+    setBusy(go, true);
+    try {
+      resetNotice();
+      const notice = await api.createFromUpload(file, state.sessionId);
+      setState({ noticeId: notice.id, notice });
+      navigate('/processing');
+    } catch (err) {
+      setBusy(go, false);
+      showError(err);
+    }
+  };
+
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files?.[0];
+    if (f) startUpload(f);
+  });
 
   ['dragenter', 'dragover'].forEach((evt) =>
     drop.addEventListener(evt, (e) => {
@@ -261,21 +279,11 @@ function renderUpload(panel) {
   );
   drop.addEventListener('drop', (e) => {
     const file = e.dataTransfer?.files?.[0];
-    if (file) setFile(file);
+    if (file) startUpload(file);
   });
 
-  go.addEventListener('click', async () => {
-    if (!pendingFile) return;
-    setBusy(go, true);
-    try {
-      resetNotice();
-      const notice = await api.createFromUpload(pendingFile, state.sessionId);
-      setState({ noticeId: notice.id, notice });
-      navigate('/processing');
-    } catch (err) {
-      setBusy(go, false);
-      showError(err);
-    }
+  go.addEventListener('click', () => {
+    if (pendingFile) startUpload(pendingFile);
   });
 }
 
