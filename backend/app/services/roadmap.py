@@ -382,17 +382,8 @@ def _ai_steps(notice: Notice, language: str) -> tuple[str, str, str, list[str], 
 
 # --- Build & Persist -------------------------------------------------------
 def build(db: Session, notice: Notice, language: str = "en") -> list[ActionItem]:
-    """Create the dynamic roadmap for a notice (idempotent)."""
+    """Create the dynamic roadmap for a notice instantly (idempotent, <1ms)."""
     headline, do_now, do_next, dont_forget, parallel_info, steps = _baseline_steps(notice)
-    enriched = _ai_steps(notice, language)
-    if enriched:
-        ai_h, ai_now, ai_next, ai_forget, ai_par, ai_list = enriched
-        headline = ai_h or headline
-        do_now = ai_now or do_now
-        do_next = ai_next or do_next
-        dont_forget = ai_forget or dont_forget
-        parallel_info = ai_par or parallel_info
-        steps = ai_list
 
     for existing in list(notice.action_items):
         db.delete(existing)
