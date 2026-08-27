@@ -68,9 +68,7 @@ export default async function processing({ main }) {
       plan: null,
       documents: null,
     });
-    // Instant 50ms settle
-    await new Promise((r) => setTimeout(r, 50));
-    navigate('/explain', { replace: true });
+    navigate('/explain');
   } catch (err) {
     stop();
     const isNotFound = err?.status === 404;
