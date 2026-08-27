@@ -60,9 +60,9 @@ class Settings(BaseSettings):
         alias="OPENAI_VISION_MODEL",
         description="multimodal model used to read notice images; defaults to OPENAI_MODEL",
     )
-    OPENAI_TIMEOUT: float = Field(12.0, description="OpenAI request timeout (s)")
+    OPENAI_TIMEOUT: float = Field(3.5, description="OpenAI request timeout (s)")
     OPENAI_RESEARCH_TIMEOUT: float = Field(
-        90.0, description="OpenAI web-research timeout (s) — searching is slower"
+        5.0, description="OpenAI web-research timeout (s) — searching is slower"
     )
 
     # Web research -----------------------------------------------------------
@@ -70,7 +70,7 @@ class Settings(BaseSettings):
         True, description="Allow server-side web research via the OpenAI API"
     )
     RESEARCH_MAX_QUERIES: int = Field(
-        5, description="Maximum research queries generated per notice"
+        3, description="Maximum research queries generated per notice"
     )
 
     # Uploads / security

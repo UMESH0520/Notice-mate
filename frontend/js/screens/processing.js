@@ -44,10 +44,10 @@ export default async function processing({ main }) {
     items[index].classList.add('is-done');
     index += 1;
     items[index].classList.add('is-active');
-  }, 400);
+  }, 120);
   const slowTimer = setTimeout(
     () => main.querySelector('#slow')?.classList.remove('hidden'),
-    6000,
+    4000,
   );
 
   const stop = () => {
@@ -68,8 +68,8 @@ export default async function processing({ main }) {
       plan: null,
       documents: null,
     });
-    // Small settle so the completed checklist is visible rather than a flash.
-    await new Promise((r) => setTimeout(r, 420));
+    // Brief 100ms settle so user sees completion before navigating
+    await new Promise((r) => setTimeout(r, 100));
     navigate('/explain', { replace: true });
   } catch (err) {
     stop();

@@ -201,11 +201,11 @@ def _resolve_image_text_fallback(images: list[tuple[bytes, str]] | None, text: s
             from PIL import Image
             img = Image.open(io.BytesIO(data))
             w, h = img.size
-            if max(w, h) > 900:
-                scale = 900 / max(w, h)
+            if max(w, h) > 640:
+                scale = 640 / max(w, h)
                 img = img.resize((int(w * scale), int(h * scale)), Image.Resampling.BILINEAR)
                 buf = io.BytesIO()
-                img.convert("RGB").save(buf, format="JPEG", quality=85)
+                img.convert("RGB").save(buf, format="JPEG", quality=80)
                 ocr_data = buf.getvalue()
             else:
                 ocr_data = data
@@ -525,7 +525,7 @@ def find_official_portal(authority: str, department: str = "", title: str = "") 
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=1.5) as resp:
+        with urllib.request.urlopen(req, timeout=0.6) as resp:
             html = resp.read().decode("utf-8", errors="ignore")
             raw_links = re.findall(r'href=["\']([^"\']+)["\']', html)
             for link in raw_links:
