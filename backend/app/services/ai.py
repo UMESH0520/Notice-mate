@@ -197,10 +197,23 @@ def _resolve_image_text_fallback(images: list[tuple[bytes, str]] | None, text: s
     extracted_chunks = []
     for data, mime in images:
         try:
+            import io
+            from PIL import Image
+            img = Image.open(io.BytesIO(data))
+            w, h = img.size
+            if max(w, h) > 900:
+                scale = 900 / max(w, h)
+                img = img.resize((int(w * scale), int(h * scale)), Image.Resampling.BILINEAR)
+                buf = io.BytesIO()
+                img.convert("RGB").save(buf, format="JPEG", quality=85)
+                ocr_data = buf.getvalue()
+            else:
+                ocr_data = data
+
             from .extraction import get_ocr_engine
             ocr = get_ocr_engine()
             if ocr is not None:
-                result, _ = ocr(data)
+                result, _ = ocr(ocr_data)
                 if result:
                     lines = [line[1] for line in result if line and len(line) > 1 and str(line[1]).strip()]
                     extracted = "\n".join(lines)
@@ -295,7 +308,24 @@ def _vision_json(client, system: str, images: list[tuple[bytes, str]]) -> dict:
         }
     ]
     for data, mime in images:
-        b64 = base64.b64encode(data).decode("ascii")
+        try:
+            import io
+            from PIL import Image
+            img = Image.open(io.BytesIO(data))
+            w, h = img.size
+            if max(w, h) > 900:
+                scale = 900 / max(w, h)
+                img = img.resize((int(w * scale), int(h * scale)), Image.Resampling.BILINEAR)
+                buf = io.BytesIO()
+                img.convert("RGB").save(buf, format="JPEG", quality=85)
+                send_data = buf.getvalue()
+                mime = "image/jpeg"
+            else:
+                send_data = data
+        except Exception:
+            send_data = data
+
+        b64 = base64.b64encode(send_data).decode("ascii")
         content.append(
             {
                 "type": "image_url",
