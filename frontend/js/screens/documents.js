@@ -86,26 +86,35 @@ function docRow(doc) {
 }
 
 function documentsGuideExplanationCard(docs) {
-  return `<div class="card card--flat" style="border:1px solid var(--border);background:var(--bg-surface);padding:1.25rem;border-radius:14px;margin-bottom:1rem">
-    <div class="row-between" style="margin-bottom:0.75rem">
+  return `<div class="card card--flat" style="border:1px solid var(--border);background:var(--bg-surface);padding:1.25rem;border-radius:14px;margin-bottom:1.25rem">
+    <div class="row-between" style="margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem">
       <strong style="font-size:1.05rem;color:var(--brand);display:flex;align-items:center;gap:0.4rem">
-        ${icon('sparkles', 20)} Required Documents Guidance
+        ${icon('sparkles', 20)} Required Documents & Official Resolution
       </strong>
-      ${badge(`${docs.length} DOCUMENT${docs.length === 1 ? '' : 'S'} LISTED`, 'brand', true)}
+      ${badge('AUTOMATIC OFFICIAL PORTAL LOOKUP', 'brand', true)}
     </div>
 
-    <p style="font-size:0.93rem;line-height:1.55;color:var(--text);margin-bottom:0.8rem">
-      NoticeMate extracted these specific required documents directly from your notice provisions. Having these ready ensures your application or response is complete and avoids delays or rejections:
+    <p style="font-size:0.94rem;line-height:1.6;color:var(--text);margin-bottom:0.85rem">
+      If a notice image or letter does not explicitly list required documents, NoticeMate automatically queries the official department regulations (e.g., Karnataka Electrical Inspectorate, Income Tax Dept, EPF, Municipal Corporation) to extract the mandatory document checklist for you.
     </p>
 
     <div class="stack stack--sm">
-      <div style="background:var(--bg-subtle);padding:0.75rem 0.9rem;border-radius:10px">
-        <strong style="font-size:0.88rem;color:var(--text)">📄 Why These Documents Matter</strong>
-        <p class="small muted" style="margin-top:0.2rem;line-height:1.45">Each document serves as proof for specific claims mentioned in the notice (e.g., tax deductions, identity validation, utility bill history, or deposit receipts).</p>
+      <div style="background:var(--bg-subtle);padding:0.8rem 1rem;border-radius:10px;border:1px solid var(--border-light)">
+        <strong style="font-size:0.9rem;color:var(--text);display:flex;align-items:center;gap:0.35rem">
+          ${icon('shield', 16)} 🏛️ Zero-Panic Search Guarantee
+        </strong>
+        <p class="small muted" style="margin-top:0.25rem;line-height:1.5">
+          You don't need to search through complex government portals or download endless PDFs. NoticeMate presents the complete document checklist, why each document is required, and how to validate it right here.
+        </p>
       </div>
-      <div style="background:var(--bg-subtle);padding:0.75rem 0.9rem;border-radius:10px">
-        <strong style="font-size:0.88rem;color:var(--text)">🔍 Honest Document Checking</strong>
-        <p class="small muted" style="margin-top:0.2rem;line-height:1.45">Upload your document to run basic structure and date checks. NoticeMate never stores sensitive files off-device or sends them to any external system.</p>
+
+      <div style="background:var(--bg-subtle);padding:0.8rem 1rem;border-radius:10px;border:1px solid var(--border-light)">
+        <strong style="font-size:0.88rem;color:var(--text);display:flex;align-items:center;gap:0.35rem">
+          ${icon('docCheck', 16)} 🔍 Private & Honest Document Checking
+        </strong>
+        <p class="small muted" style="margin-top:0.25rem;line-height:1.5">
+          Upload your document file to run instant, private readability and structure checks. NoticeMate never stores sensitive files off-device or sends them to external servers.
+        </p>
       </div>
     </div>
   </div>`;
