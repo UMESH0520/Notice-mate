@@ -164,20 +164,34 @@ def _extract_pdf(content: bytes) -> ExtractedInput:
     )
 
 
+_OCR_INSTANCE = None
+
+
+def get_ocr_engine():
+    """Return a cached singleton instance of RapidOCR to avoid repeated ONNX initialization."""
+    global _OCR_INSTANCE
+    if _OCR_INSTANCE is None:
+        try:
+            from rapidocr_onnxruntime import RapidOCR
+            _OCR_INSTANCE = RapidOCR()
+        except Exception as exc:
+            logger.info("RapidOCR initialization failed: %s", exc)
+            return None
+    return _OCR_INSTANCE
+
+
 # --- Images ----------------------------------------------------------------
 def _extract_image(content: bytes, ext: str) -> ExtractedInput:
     """Extract real text from uploaded notice images using on-device RapidOCR."""
-    from . import ai  # local import avoids a circular import at module load
-
     mime = _MIME.get(ext, "image/png")
     extracted_text = ""
     try:
-        from rapidocr_onnxruntime import RapidOCR
-        ocr = RapidOCR()
-        result, _ = ocr(content)
-        if result:
-            lines = [line[1] for line in result if line and len(line) > 1 and line[1].strip()]
-            extracted_text = "\n".join(lines)
+        ocr = get_ocr_engine()
+        if ocr is not None:
+            result, _ = ocr(content)
+            if result:
+                lines = [line[1] for line in result if line and len(line) > 1 and line[1].strip()]
+                extracted_text = "\n".join(lines)
     except Exception as exc:
         logger.info("Local OCR extraction failed: %s", exc)
 

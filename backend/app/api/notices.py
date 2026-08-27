@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
@@ -41,7 +42,6 @@ def _lang(language: str) -> str:
 
 
 # --- Creation --------------------------------------------------------------
-# --- Creation --------------------------------------------------------------
 @router.post("/api/notices/upload", response_model=NoticeOut, status_code=201)
 async def upload_notice(
     file: UploadFile = File(...),
@@ -61,7 +61,25 @@ async def upload_notice(
     except UploadError as exc:
         raise HTTPException(status_code=413, detail=str(exc)) from exc
 
-    extracted = extraction.extract(content, ext)
+    try:
+        extracted = await asyncio.wait_for(
+            asyncio.to_thread(extraction.extract, content, ext), timeout=25.0
+        )
+    except asyncio.TimeoutError:
+        logger.warning("Extraction timed out for file: %s", filename)
+        extracted = extraction.ExtractedInput(
+            text=f"[Uploaded Document Image: {filename}]",
+            images=[(content, extraction._MIME.get(ext, "image/png"))],
+            kind="image",
+        )
+    except Exception as exc:
+        logger.warning("Extraction error: %s", exc)
+        extracted = extraction.ExtractedInput(
+            text=f"[Uploaded Document Image: {filename}]",
+            images=[(content, extraction._MIME.get(ext, "image/png"))],
+            kind="image",
+        )
+
     raw_text = extracted.text.strip() or f"[Uploaded Document Image: {filename}]"
 
     notice = notice_svc.create_from_text(

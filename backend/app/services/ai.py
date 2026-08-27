@@ -196,14 +196,15 @@ def _resolve_image_text_fallback(images: list[tuple[bytes, str]] | None, text: s
     extracted_chunks = []
     for data, mime in images:
         try:
-            from rapidocr_onnxruntime import RapidOCR
-            ocr = RapidOCR()
-            result, _ = ocr(data)
-            if result:
-                lines = [line[1] for line in result if line and len(line) > 1 and str(line[1]).strip()]
-                extracted = "\n".join(lines)
-                if len(extracted.strip()) >= 30:
-                    extracted_chunks.append(extracted)
+            from .extraction import get_ocr_engine
+            ocr = get_ocr_engine()
+            if ocr is not None:
+                result, _ = ocr(data)
+                if result:
+                    lines = [line[1] for line in result if line and len(line) > 1 and str(line[1]).strip()]
+                    extracted = "\n".join(lines)
+                    if len(extracted.strip()) >= 30:
+                        extracted_chunks.append(extracted)
         except Exception as exc:
             logger.info("RapidOCR dynamic extraction failed: %s", exc)
 
