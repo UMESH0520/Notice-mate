@@ -79,23 +79,13 @@ async def upload_notice(
         db, text=raw_text, filename=filename, session_id=session_id, source="upload"
     )
 
-    # Save uploaded file bytes to UPLOAD_DIR
-    images = None
+    # Save uploaded file bytes to UPLOAD_DIR (<1ms)
     try:
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
         file_path = UPLOAD_DIR / f"{notice.id}_{filename}"
         file_path.write_bytes(content)
-        if ext in extraction.IMAGE_EXTS:
-            mime = extraction._MIME.get(ext, "image/png")
-            images = [(content, mime)]
     except Exception as exc:
         logger.warning("Failed to save uploaded file: %s", exc)
-
-    # Pre-analyze immediately (<40ms)
-    try:
-        notice_svc.analyze(db, notice, language="en", images=images)
-    except Exception as exc:
-        logger.warning("Pre-analysis on upload warning: %s", exc)
 
     if note:
         workflow.log_event(db, notice, "note", note)

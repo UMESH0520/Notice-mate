@@ -196,11 +196,11 @@ def _resolve_image_text_fallback(images: list[tuple[bytes, str]] | None, text: s
             from PIL import Image
             img = Image.open(io.BytesIO(data))
             w, h = img.size
-            if max(w, h) > 900:
-                scale = 900 / max(w, h)
+            if max(w, h) > 600:
+                scale = 600 / max(w, h)
                 img = img.resize((int(w * scale), int(h * scale)), Image.Resampling.BILINEAR)
                 buf = io.BytesIO()
-                img.convert("RGB").save(buf, format="JPEG", quality=85)
+                img.convert("RGB").save(buf, format="JPEG", quality=80)
                 ocr_data = buf.getvalue()
             else:
                 ocr_data = data
