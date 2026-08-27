@@ -58,3 +58,10 @@ Desktop.ini
 # --- Data ---
 *.sqlite3
 *.db
+*.db-shm
+*.db-wal
+*.db-journal
+backend/uploads/
+uploads/
+backend/notice_mate.db*
+notice_mate.db*

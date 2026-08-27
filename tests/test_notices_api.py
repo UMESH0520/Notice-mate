@@ -129,3 +129,57 @@ def test_create_text_notice():
     assert res_analyze.status_code == 200
     analysis = res_analyze.json()
     assert analysis["deadline"] == "30 October 2026"
+
+
+def test_documents_format_size_and_research_enrichment():
+    # 1. Create notice for Karnataka lift notice
+    res_create = client.post("/api/notices/demo", json={"demo_id": "karnataka-lift-notice-2023"})
+    assert res_create.status_code == 201
+    notice_id = res_create.json()["id"]
+
+    # 2. Analyze
+    res_analyze = client.post(f"/api/notices/{notice_id}/analyze", json={"language": "en"})
+    assert res_analyze.status_code == 200
+
+    # 3. Check documents endpoint
+    res_docs = client.get(f"/api/notices/{notice_id}/documents")
+    assert res_docs.status_code == 200
+    docs = res_docs.json()
+    assert len(docs) >= 3
+
+    # Verify doc_format and size_limit are populated
+    for d in docs:
+        assert d["name"] is not None
+        assert "doc_format" in d
+        assert "size_limit" in d
+        assert "source_note" in d
+
+    # 4. Upload a test PDF document
+    doc_id = docs[0]["id"]
+    test_pdf_content = b"%PDF-1.4 dummy valid pdf file content for testing portal validation limits."
+    res_up = client.post(
+        f"/api/notices/{notice_id}/documents",
+        data={"document_id": doc_id, "name": docs[0]["name"]},
+        files={"file": ("test_safety_certificate.pdf", test_pdf_content, "application/pdf")},
+    )
+    assert res_up.status_code == 200
+    up_doc = res_up.json()
+    assert up_doc["status"] == "uploaded"
+    assert "validation" in up_doc
+    assert up_doc["validation"]["ok"] is True
+    checks = up_doc["validation"]["checks"]
+    check_labels = [c["label"] for c in checks]
+    assert any("size limit" in lbl.lower() for lbl in check_labels)
+    assert any("format" in lbl.lower() for lbl in check_labels)
+
+    # 5. Run research and verify documents are enriched
+    res_research = client.post(f"/api/notices/{notice_id}/research")
+    assert res_research.status_code == 200
+    research_data = res_research.json()
+    assert research_data["mode"] == "demo"
+
+    res_docs_after = client.get(f"/api/notices/{notice_id}/documents")
+    assert res_docs_after.status_code == 200
+    docs_after = res_docs_after.json()
+    assert len(docs_after) >= len(docs)
+

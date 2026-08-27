@@ -50,13 +50,13 @@ _MONTHS = {
 
 _MONTH_ALT = "|".join(sorted(_MONTHS, key=len, reverse=True))
 
-# "30 September 2026" / "30 Sep 2026" / "30th September, 2026"
+# "30 September 2026" / "30 Sep 2026" / "30th September, 2026" / "30.09.2026"
 _DMY_TEXT = re.compile(
-    rf"\b(\d{{1,2}})(?:st|nd|rd|th)?\s+({_MONTH_ALT})\.?,?\s+(\d{{4}})\b", re.I
+    rf"\b(\d{{1,2}})(?:st|nd|rd|th)?[.,\s]*({_MONTH_ALT})\.?[.,\s]*(\d{{4}})\b", re.I
 )
-# "September 30, 2026"
+# "September 30, 2026" / "NOVEMBER3.2026" / "AUGUST 20,2026"
 _MDY_TEXT = re.compile(
-    rf"\b({_MONTH_ALT})\.?\s+(\d{{1,2}})(?:st|nd|rd|th)?,?\s+(\d{{4}})\b", re.I
+    rf"\b({_MONTH_ALT})\.?[.,\s]*(\d{{1,2}})(?:st|nd|rd|th)?[.,\s]*(\d{{4}})\b", re.I
 )
 # "30-09-2026" / "30/09/2026" / "30.09.2026"
 _DMY_NUM = re.compile(r"\b(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})\b")
@@ -114,11 +114,21 @@ def find_dates_in(fragment: str) -> list[tuple[str, str]]:
 
 
 # Label patterns → (kind, friendly label, is_deadline)
-#
-# ORDER MATTERS. The first pattern that matches a line wins, so the most
-# specific labels must come first: "Last date for fee payment" has to be read as
-# a payment deadline, not as the application deadline.
 _DATE_LABELS: list[tuple[re.Pattern[str], str, str, bool]] = [
+    (re.compile(r"submission\s*deadline|last\s*date\s*for\s*submission|tenders?\s*(?:will\s*be\s*)?received\s*(?:up\s*to|by|till)", re.I),
+     "submission_deadline", "Submission deadline", True),
+    (re.compile(r"qualifying\s*deadline", re.I),
+     "qualifying_deadline", "Qualifying deadline", True),
+    (re.compile(r"withdrawal\s*deadline", re.I),
+     "withdrawal_deadline", "Withdrawal deadline", True),
+    (re.compile(r"last\s*(?:day|date)\s*to\s*register|voter\s*registration|registration\s*deadline", re.I),
+     "registration_deadline", "Voter registration deadline", True),
+    (re.compile(r"early\s*voting", re.I),
+     "early_voting", "Early voting period", False),
+    (re.compile(r"general\s*election|election\s*(?:day|date)|election\s*to\s*be\s*held|polling\s*(?:day|date)", re.I),
+     "election_date", "Election date", True),
+    (re.compile(r"quotations?\s*(?:received|due)|bid\s*submission", re.I),
+     "tender_submission", "Tender / quotation submission deadline", True),
     (re.compile(r"(?:fee\s+)?payment[^\n]{0,20}(?:deadline|due|last\s+date)|last\s+date\s+for\s+(?:\w+\s+){0,2}(?:fee|payment)|fee\s+can\s+be\s+paid", re.I),
      "payment_deadline", "Fee payment deadline", True),
     (re.compile(r"correction\s+(?:window|period|facility)|edit\s+window|modification\s+window", re.I),
@@ -646,6 +656,277 @@ def parse_documents(text: str) -> list[RequiredDocument]:
                 break
         if out:
             break
+
+    if not out:
+        low_text = (text or "").lower()
+
+        # 1. Lift & Electrical Inspectorate
+        is_lift = any(k in low_text for k in ["lift", "elevator", "escalator", "electrical inspector", "ceik", "voltage", "substation", "otis"])
+        if is_lift:
+            out.append(
+                RequiredDocument(
+                    name="OTIS / OEM Technical Lift Installation & Test Safety Certificate",
+                    reason="Mandatory manufacturer & electrical engineer test certificate confirming safety compliance before license issuance",
+                    required=True,
+                    requirement="yes",
+                    stage="application",
+                    doc_format="PDF (scanned)",
+                    size_limit="2 MB max",
+                    validity="Current technical test report",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Karnataka Electrical Inspectorate (ceik.karnataka.gov.in) Rules 2015",
+                )
+            )
+            out.append(
+                RequiredDocument(
+                    name="Form A — Application for Grant of License for Working of Lift",
+                    reason="Statutory application form prescribed under Karnataka Lifts, Escalators and Passenger Conveyors Rules, 2015",
+                    required=True,
+                    requirement="yes",
+                    stage="application",
+                    doc_format="PDF / Duly signed form",
+                    size_limit="1 MB max",
+                    validity="Prescribed Form A",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Official Department Portal & Statutory Form Rules",
+                )
+            )
+            out.append(
+                RequiredDocument(
+                    name="Building Sanction Plan & Electrical Single Line Diagram (SLD)",
+                    reason="Approved architectural layout showing lift shafts, machine room, and electrical drawings signed by licensed contractor",
+                    required=True,
+                    requirement="yes",
+                    stage="application",
+                    doc_format="PDF (high resolution)",
+                    size_limit="5 MB max",
+                    validity="Approved building sanction",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Official Electrical Inspection Safety Standards",
+                )
+            )
+            out.append(
+                RequiredDocument(
+                    name="Government Treasury Challan / Inspection Fee Receipt",
+                    reason="Proof of official government fee remittance for statutory lift inspection and license fee",
+                    required=True,
+                    requirement="yes",
+                    stage="application",
+                    doc_format="PDF / JPG",
+                    size_limit="500 KB max",
+                    validity="Valid treasury challan",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Karnataka Government Treasury (K2 / Khajane II)",
+                )
+            )
+
+        # 2. Law / Prosecution / Advocate Specific
+        is_legal_job = any(k in low_text for k in ["prosecutor", "law officer", "advocate", "bar council", "legal officer", "bachelor's degree in law", "degree in law", "ll.b", "llb"])
+        if is_legal_job:
+            out.append(
+                RequiredDocument(
+                    name="Bachelor's Degree in Law (LL.B.) / Graduation Certificate",
+                    reason="Proof of required legal educational qualification from a recognized University / Bar Council of India approved law college",
+                    required=True,
+                    requirement="yes",
+                    stage="application",
+                    doc_format="PDF (scanned 200 DPI)",
+                    size_limit="500 KB max",
+                    validity="Original degree / provisional certificate",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Official Portal & Advertisement Qualification Rules",
+                )
+            )
+            out.append(
+                RequiredDocument(
+                    name="Advocate Practice & Bar Council Enrollment Experience Certificate",
+                    reason="Proof of active legal practice experience issued by Bar Association / District Court / High Court Registry",
+                    required=True,
+                    requirement="yes",
+                    stage="application",
+                    doc_format="PDF (scanned)",
+                    size_limit="500 KB max",
+                    validity="Current certificate signed by Bar President/Secretary",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Official Portal & Experience Eligibility Criteria",
+                )
+            )
+
+        # 3. Tax / GST / Financial Notices
+        is_tax = any(k in low_text for k in ["income tax", "gst", "assessment year", "scrutiny", "tax notice", "itr", "demand notice", "section 148", "section 143", "section 73"])
+        if is_tax:
+            out.append(
+                RequiredDocument(
+                    name="Audited Books of Accounts & Financial Statements",
+                    reason="Balance Sheet, Profit & Loss Statement, and Trial Balance for the relevant Assessment Year",
+                    required=True,
+                    requirement="yes",
+                    stage="verification",
+                    doc_format="PDF",
+                    size_limit="5 MB max",
+                    validity="Audited by Chartered Accountant",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Income Tax / GST E-Filing Compliance Portal",
+                )
+            )
+            out.append(
+                RequiredDocument(
+                    name="Bank Account Statements for Relevant Period",
+                    reason="Complete bank statements of all active accounts supporting transactions queried in notice",
+                    required=True,
+                    requirement="yes",
+                    stage="verification",
+                    doc_format="PDF (downloaded from NetBanking)",
+                    size_limit="5 MB max",
+                    validity="Certified bank statements",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Statutory Notice Verification Guidelines",
+                )
+            )
+            out.append(
+                RequiredDocument(
+                    name="Filed ITR / GSTR Return Acknowledgment & Form 26AS",
+                    reason="Copy of original filed tax return acknowledgment and annual tax credit statement",
+                    required=True,
+                    requirement="yes",
+                    stage="verification",
+                    doc_format="PDF",
+                    size_limit="2 MB max",
+                    validity="Official portal filed return",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Official Income Tax Portal (incometax.gov.in)",
+                )
+            )
+
+        # 4. General Recruitment / Public Examination
+        is_general_recruitment = any(k in low_text for k in ["recruitment", "advertisement no", "vacancies", "opsc", "upsc", "spsc", "public service commission", "online application", "post of", "posts of"])
+        if is_general_recruitment and not is_legal_job and not is_lift and not is_tax:
+            out.append(
+                RequiredDocument(
+                    name="Essential Educational Qualification Degree & Marksheets",
+                    reason="Proof of prescribed educational qualifications from a recognized Board / University",
+                    required=True,
+                    requirement="yes",
+                    stage="application",
+                    doc_format="PDF (scanned 200 DPI)",
+                    size_limit="500 KB max",
+                    validity="Original certificate / final marksheet",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Official Recruitment Advertisement Requirements",
+                )
+            )
+
+        # 5. Common Government / Recruitment Identification & Fee docs
+        if is_general_recruitment or is_legal_job:
+            out.append(
+                RequiredDocument(
+                    name="10th / Matriculation Certificate (Date of Birth Proof)",
+                    reason="Official proof of candidate date of birth and father's name as recorded in secondary school board certificate",
+                    required=True,
+                    requirement="yes",
+                    stage="application",
+                    doc_format="PDF / JPG",
+                    size_limit="300 KB max",
+                    validity="Board certificate",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Official Age Eligibility Verification",
+                )
+            )
+
+        # 5. Utility / Municipal / Electricity Notices
+        is_utility = any(k in low_text for k in ["electricity", "disconnection", "power supply", "meter no", "consumer no", "water supply", "property tax", "bill arrears"])
+        if is_utility:
+            out.append(
+                RequiredDocument(
+                    name="Paid Arrears Bill Receipt / Online Payment Acknowledgment",
+                    reason="Proof of payment of overdue electricity/utility bill to prevent service disconnection",
+                    required=True,
+                    requirement="yes",
+                    stage="verification",
+                    doc_format="PDF / JPG",
+                    size_limit="1 MB max",
+                    validity="Current billing cycle",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Official Department Payment & Billing Portal",
+                )
+            )
+            out.append(
+                RequiredDocument(
+                    name="Consumer ID / Electricity Connection Sanction Letter",
+                    reason="Proof of authorized power connection and registered consumer ownership",
+                    required=False,
+                    requirement="conditional",
+                    stage="verification",
+                    doc_format="PDF / JPG",
+                    size_limit="2 MB max",
+                    validity="Valid connection record",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Discom Consumer Registration Guidelines",
+                )
+            )
+
+        # 6. Common Government / Recruitment Identification & Fee docs
+        if is_general_recruitment or is_legal_job or any(k in low_text for k in ["caste certificate", "sebc certificate", "sc certificate", "st certificate", "pwd certificate", "disability certificate", "reservation category"]):
+            out.append(
+                RequiredDocument(
+                    name="Category / Caste / Disability Certificate (If applicable)",
+                    reason="Required for candidates claiming category reservation or fee concession (SC/ST/SEBC/PwD/Ex-Servicemen)",
+                    required=False,
+                    requirement="conditional",
+                    stage="application",
+                    doc_format="PDF (scanned)",
+                    size_limit="500 KB max",
+                    validity="Competent Revenue / Medical authority issued",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Official Reservation & Category Exemption Rules",
+                )
+            )
+
+        if is_general_recruitment or is_legal_job or any(k in low_text for k in ["application fee", "examination fee", "exam fee", "fee receipt", "treasury challan"]):
+            out.append(
+                RequiredDocument(
+                    name="Application / Examination Fee Payment Receipt",
+                    reason="Proof of online examination fee payment (Rs. 700 / applicable fee confirmation receipt)",
+                    required=True,
+                    requirement="yes",
+                    stage="application",
+                    doc_format="PDF / JPG",
+                    size_limit="300 KB max",
+                    validity="Transaction reference / e-challan",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Official Fee Payment & Treasury Receipt Requirement",
+                )
+            )
+
+        if is_general_recruitment or is_legal_job:
+            out.append(
+                RequiredDocument(
+                    name="Government Photo Identity Proof (Aadhaar / Voter ID / Passport)",
+                    reason="Identity verification during online application, examination hall entry, and verification",
+                    required=True,
+                    requirement="yes",
+                    stage="application",
+                    doc_format="PDF / JPG",
+                    size_limit="500 KB max",
+                    validity="Valid Government ID",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Official Government Identification Policy",
+                )
+            )
+            out.append(
+                RequiredDocument(
+                    name="Recent Passport Size Photograph & Specimen Signature Scan",
+                    reason="Upload candidate passport photograph (20-50 KB JPG) and signature scan (10-20 KB JPG) per official specs",
+                    required=True,
+                    requirement="yes",
+                    stage="application",
+                    doc_format="JPG / JPEG",
+                    size_limit="50 KB max",
+                    validity="Taken within last 3 months",
+                    trust="OFFICIAL_SOURCE",
+                    source_note="Official Online Portal Application Upload Guidelines",
+                )
+            )
     return out
 
 

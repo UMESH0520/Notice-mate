@@ -212,26 +212,57 @@ def analyze(
 
 def _sync_documents(db: Session, notice: Notice, a) -> None:
     """Create or refresh the document checklist without losing uploads."""
+    docs_list = list(a.required_documents or [])
+    
+    from .extractors import parse_documents
+    raw = notice.raw_text or f"{a.authority} {a.department} {a.title} {a.category}"
+    derived = parse_documents(raw)
+    
+    names_present = {
+        (getattr(d, "name", None) or (d.get("name") if isinstance(d, dict) else str(d))).strip().lower()
+        for d in docs_list
+        if getattr(d, "name", None) or (isinstance(d, dict) and d.get("name"))
+    }
+    
+    for dev_doc in derived:
+        d_name = dev_doc.name.strip().lower()
+        if d_name not in names_present:
+            docs_list.append(dev_doc)
+            names_present.add(d_name)
+            
+    a.required_documents = docs_list
+
     existing = {d.name.strip().lower(): d for d in notice.documents}
-    for rd in a.required_documents:
-        row = existing.pop(rd.name.strip().lower(), None)
+    for rd in docs_list:
+        rd_name = getattr(rd, "name", None) or (rd.get("name") if isinstance(rd, dict) else str(rd))
+        rd_reason = getattr(rd, "reason", None) or (rd.get("reason") if isinstance(rd, dict) else "")
+        rd_required = getattr(rd, "required", True) if hasattr(rd, "required") else (rd.get("required", True) if isinstance(rd, dict) else True)
+        rd_requirement = getattr(rd, "requirement", "yes") if hasattr(rd, "requirement") else (rd.get("requirement", "yes") if isinstance(rd, dict) else "yes")
+        rd_stage = getattr(rd, "stage", "application") if hasattr(rd, "stage") else (rd.get("stage", "application") if isinstance(rd, dict) else "application")
+        rd_doc_format = getattr(rd, "doc_format", "") if hasattr(rd, "doc_format") else (rd.get("doc_format", "") if isinstance(rd, dict) else "")
+        rd_size_limit = getattr(rd, "size_limit", "") if hasattr(rd, "size_limit") else (rd.get("size_limit", "") if isinstance(rd, dict) else "")
+        rd_validity = getattr(rd, "validity", "") if hasattr(rd, "validity") else (rd.get("validity", "") if isinstance(rd, dict) else "")
+        rd_trust = getattr(rd, "trust", "OFFICIAL_SOURCE") if hasattr(rd, "trust") else (rd.get("trust", "OFFICIAL_SOURCE") if isinstance(rd, dict) else "OFFICIAL_SOURCE")
+        rd_source_note = getattr(rd, "source_note", "Official Portal & Regulations") if hasattr(rd, "source_note") else (rd.get("source_note", "Official Portal & Regulations") if isinstance(rd, dict) else "Official Portal & Regulations")
+
+        row = existing.pop(rd_name.strip().lower(), None)
         if row is None:
             row = Document(
                 notice_id=notice.id,
-                name=rd.name,
+                name=rd_name,
                 status=DocumentStatus.NOT_STARTED,
             )
             db.add(row)
         # Refresh the requirement metadata; never the citizen's own progress.
-        row.reason = rd.reason
-        row.required = rd.required
-        row.requirement = rd.requirement
-        row.stage = rd.stage
-        row.doc_format = rd.doc_format
-        row.size_limit = rd.size_limit
-        row.validity = rd.validity
-        row.trust = rd.trust
-        row.source_note = rd.source_note
+        row.reason = rd_reason
+        row.required = rd_required
+        row.requirement = rd_requirement
+        row.stage = rd_stage
+        row.doc_format = rd_doc_format
+        row.size_limit = rd_size_limit
+        row.validity = rd_validity
+        row.trust = rd_trust
+        row.source_note = rd_source_note
         db.add(row)
     # Anything left in ``existing`` is no longer required; keep it only if the
     # citizen already attached a file to it.

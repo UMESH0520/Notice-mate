@@ -166,26 +166,28 @@ def _extract_pdf(content: bytes) -> ExtractedInput:
 
 # --- Images ----------------------------------------------------------------
 def _extract_image(content: bytes, ext: str) -> ExtractedInput:
-    """Prepare an image for the multimodal model.
-
-    The bytes are passed through untouched; nothing is executed and nothing is
-    served back publicly. If no vision model is reachable, the note explains
-    that honestly — we never claim to have read an image we did not read.
-    """
+    """Extract real text from uploaded notice images using on-device RapidOCR."""
     from . import ai  # local import avoids a circular import at module load
 
     mime = _MIME.get(ext, "image/png")
-    if not ai.ai_available():
-        return ExtractedInput(
-            kind="image",
-            images=[],
-            note=(
-                "We received your image, but reading text from photos needs the AI "
-                f"service, which is unavailable right now. {ai.ai_note()} "
-                "You can paste the notice text instead, or try a demo notice."
-            ),
-        )
-    return ExtractedInput(kind="image", images=[(content, mime)], page_count=1, pages_read=1)
+    extracted_text = ""
+    try:
+        from rapidocr_onnxruntime import RapidOCR
+        ocr = RapidOCR()
+        result, _ = ocr(content)
+        if result:
+            lines = [line[1] for line in result if line and len(line) > 1 and line[1].strip()]
+            extracted_text = "\n".join(lines)
+    except Exception as exc:
+        logger.info("Local OCR extraction failed: %s", exc)
+
+    return ExtractedInput(
+        text=extracted_text,
+        images=[(content, mime)],
+        page_count=1,
+        pages_read=1,
+        kind="image",
+    )
 
 
 # --- Text ------------------------------------------------------------------

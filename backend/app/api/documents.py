@@ -29,6 +29,11 @@ def list_documents(
     notice_id: str, db: Session = Depends(get_session)
 ) -> list[DocumentOut]:
     notice = get_notice_or_404(db, notice_id)
+    if not notice.documents and notice.analysis:
+        from ..services import notices as notice_svc
+        notice_svc._sync_documents(db, notice, notice.analysis)
+        db.commit()
+        db.refresh(notice)
     return [DocumentOut.model_validate(d) for d in notice.documents]
 
 
@@ -49,11 +54,19 @@ async def upload_document(
         if doc is None:
             raise HTTPException(status_code=404, detail="Document item not found.")
     expected_name = (doc.name if doc else name) or "document"
+    expected_fmt = getattr(doc, "doc_format", "") if doc else ""
+    expected_size = getattr(doc, "size_limit", "") if doc else ""
 
     filename = sanitize_filename(file.filename)
     content = await file.read()
     try:
-        report = doc_svc.validate_document(expected_name, filename, content)
+        report = doc_svc.validate_document(
+            expected_name,
+            filename,
+            content,
+            expected_format=expected_fmt,
+            expected_size_limit=expected_size,
+        )
     except UploadError as exc:
         raise HTTPException(status_code=415, detail=str(exc)) from exc
 

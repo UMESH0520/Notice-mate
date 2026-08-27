@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
@@ -142,6 +142,7 @@ class _Findings:
     summary: str
     mode: str  # live | demo | unavailable | disabled
     message: str = ""
+    required_documents: list[dict] = field(default_factory=list)
 
 
 # --- Public API ------------------------------------------------------------
@@ -162,6 +163,48 @@ def run_research(db: Session, notice: Notice, force: bool = False) -> ResearchOu
 
     findings = _gather(notice)
     _persist(db, notice, findings)
+    
+    # If research identified required documents or notice has analysis, enrich the checklist
+    if notice.analysis:
+        from . import notices as notice_svc
+        if findings.required_documents:
+            current_docs = list(notice.analysis.required_documents or [])
+            doc_map: dict[str, dict] = {}
+            for d in current_docs:
+                d_dict = d if isinstance(d, dict) else (d.model_dump() if hasattr(d, "model_dump") else {"name": str(d)})
+                doc_map[d_dict.get("name", "").strip().lower()] = d_dict
+
+            for rd in findings.required_documents:
+                rd_dict = rd if isinstance(rd, dict) else (rd.model_dump() if hasattr(rd, "model_dump") else {"name": str(rd)})
+                rd_name = rd_dict.get("name", "").strip()
+                if not rd_name:
+                    continue
+                k = rd_name.lower()
+                if k in doc_map:
+                    # Enrich existing document with research findings
+                    target = doc_map[k]
+                    if rd_dict.get("doc_format") and not target.get("doc_format"):
+                        target["doc_format"] = rd_dict["doc_format"]
+                    if rd_dict.get("size_limit") and not target.get("size_limit"):
+                        target["size_limit"] = rd_dict["size_limit"]
+                    if rd_dict.get("validity") and not target.get("validity"):
+                        target["validity"] = rd_dict["validity"]
+                    if rd_dict.get("stage") and target.get("stage") in ("unknown", ""):
+                        target["stage"] = rd_dict["stage"]
+                    if rd_dict.get("source_note"):
+                        target["source_note"] = rd_dict["source_note"]
+                    if rd_dict.get("reason") and not target.get("reason"):
+                        target["reason"] = rd_dict["reason"]
+                    target["trust"] = "OFFICIAL_SOURCE"
+                else:
+                    rd_dict["trust"] = "OFFICIAL_SOURCE"
+                    rd_dict.setdefault("source_note", "Official Department Portal & Regulations")
+                    current_docs.append(rd_dict)
+                    doc_map[k] = rd_dict
+
+            notice.analysis.required_documents = current_docs
+        notice_svc._sync_documents(db, notice, notice.analysis)
+
     workflow.advance_state(db, notice, WorkflowState.RESEARCHED)
     workflow.log_event(
         db,
@@ -180,15 +223,16 @@ def run_research(db: Session, notice: Notice, force: bool = False) -> ResearchOu
 
 
 def _gather(notice: Notice) -> _Findings:
-    """Try live research first, then curated demo data, then be honest."""
+    """Try curated demo data first for demo notices, then live research, then be honest."""
+    if notice.demo_id:
+        demo = get_demo_research(notice.demo_id)
+        if demo:
+            return _from_demo(demo)
+
     if settings.research_enabled and ai.ai_available():
         live = _live_research(notice)
         if live is not None:
             return live
-
-    demo = get_demo_research(notice.demo_id)
-    if demo:
-        return _from_demo(demo)
 
     if not settings.ENABLE_WEB_RESEARCH:
         mode, message = "disabled", DISABLED_MESSAGE
@@ -276,6 +320,7 @@ def _live_research(notice: Notice) -> _Findings | None:
         q["result_count"] = sum(1 for s in sources if s.get("query") == q["query"])
         q["status"] = "ok" if q["result_count"] else "no_results"
 
+    res_docs = raw.get("required_documents") or []
     if not sources:
         return _Findings(
             queries=queries,
@@ -285,6 +330,7 @@ def _live_research(notice: Notice) -> _Findings | None:
             summary="",
             mode="live",
             message=UNVERIFIED_MESSAGE,
+            required_documents=res_docs,
         )
 
     return _Findings(
@@ -294,6 +340,7 @@ def _live_research(notice: Notice) -> _Findings | None:
         unverified=unverified,
         summary=str(raw.get("summary", "")).strip(),
         mode="live",
+        required_documents=res_docs,
     )
 
 
@@ -465,6 +512,7 @@ def _from_demo(demo: dict) -> _Findings:
         summary=demo.get("summary", ""),
         mode="demo",
         message=DEMO_RESEARCH_MESSAGE,
+        required_documents=list(demo.get("required_documents", [])),
     )
 
 
