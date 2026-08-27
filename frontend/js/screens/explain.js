@@ -19,15 +19,161 @@ import {
 } from '../ui.js';
 import { lang, loadInto, requireNotice } from './shared.js';
 
+/**
+ * Robustly parses Indian & standard date formats:
+ * - DD.MM.YYYY / DD/MM/YYYY / DD-MM-YYYY (e.g. 22.04.2021, 23/04/2021)
+ * - YYYY-MM-DD (e.g. 2023-08-10)
+ * - 10 AUG 2023 / 10-AUG-2023
+ * - Extracts time if present (e.g. 12:30 P.M., 5:00 PM, 17:00)
+ */
+export function parseNoticeDeadlineDate(text) {
+  if (!text || typeof text !== 'string') return null;
+  const str = text.trim();
+
+  // Try standard JS Date parse first
+  let d = new Date(str);
+  if (!Number.isNaN(d.getTime())) return d;
+
+  // Extract DD.MM.YYYY or DD/MM/YYYY or DD-MM-YYYY
+  const dmyMatch = str.match(/(\d{1,2})[\.\/-](\d{1,2})[\.\/-](\d{4})/);
+  if (dmyMatch) {
+    const day = parseInt(dmyMatch[1], 10);
+    const month = parseInt(dmyMatch[2], 10) - 1;
+    const year = parseInt(dmyMatch[3], 10);
+
+    let hours = 23,
+      minutes = 59;
+    const timeMatch = str.match(/(\d{1,2}):(\d{2})\s*(A\.?M\.?|P\.?M\.?)?/i);
+    if (timeMatch) {
+      hours = parseInt(timeMatch[1], 10);
+      minutes = parseInt(timeMatch[2], 10);
+      const ampm = (timeMatch[3] || '').toUpperCase().replace(/\./g, '');
+      if (ampm === 'PM' && hours < 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+    }
+    const dateObj = new Date(year, month, day, hours, minutes, 0);
+    if (!Number.isNaN(dateObj.getTime())) return dateObj;
+  }
+
+  // Extract DD MMM YYYY (e.g. 10 AUG 2023)
+  const dMonYMatch = str.match(
+    /(\d{1,2})[\s\/-]+([A-Za-z]{3,9})[\s\/-]+(\d{4})/,
+  );
+  if (dMonYMatch) {
+    const dateObj = new Date(
+      `${dMonYMatch[1]} ${dMonYMatch[2]} ${dMonYMatch[3]}`,
+    );
+    if (!Number.isNaN(dateObj.getTime())) return dateObj;
+  }
+
+  return null;
+}
+
 /** Days until a deadline, or null when the date can't be parsed. */
 export function daysUntil(deadlineText) {
   if (!deadlineText) return null;
-  const parsed = new Date(deadlineText);
-  if (Number.isNaN(parsed.getTime())) return null;
+  const parsed = parseNoticeDeadlineDate(deadlineText);
+  if (!parsed) return null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  parsed.setHours(0, 0, 0, 0);
-  return Math.round((parsed - today) / 86_400_000);
+  const target = new Date(parsed);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target - today) / 86_400_000);
+}
+
+export function getDeadlineTimeInfo(deadlineText) {
+  if (!deadlineText) {
+    return {
+      isPassed: false,
+      badgeText: 'ℹ️ NO EXPLICIT DEADLINE',
+      badgeVariant: 'muted',
+      statusText:
+        'No explicit calendar deadline was found in the text. Standard statutory response timelines apply.',
+      days: null,
+    };
+  }
+
+  const lower = deadlineText.toLowerCase();
+  const isImmediate =
+    lower.includes('immediate') ||
+    lower.includes('earliest') ||
+    lower.includes('forthwith');
+
+  if (isImmediate) {
+    return {
+      isPassed: true,
+      isImmediate: true,
+      badgeText: '🚨 IMMEDIATE ACTION REQUIRED',
+      badgeVariant: 'danger',
+      statusText:
+        'This notice demands immediate compliance or action to avoid administrative penalties.',
+      days: 0,
+    };
+  }
+
+  const deadlineDate = parseNoticeDeadlineDate(deadlineText);
+  if (!deadlineDate) {
+    return {
+      isPassed: false,
+      badgeText: '⏰ DEADLINE SPECIFIED',
+      badgeVariant: 'brand',
+      statusText: `Specified Deadline: ${deadlineText}. Follow the action plan to comply without delay.`,
+      days: null,
+    };
+  }
+
+  const now = new Date();
+  const diffMs = deadlineDate - now;
+
+  if (diffMs < 0) {
+    const pastDays = Math.abs(Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+    const daysLabel =
+      pastDays > 0 ? `${pastDays} DAY${pastDays === 1 ? '' : 'S'} PASSED` : 'PASSED';
+    return {
+      isPassed: true,
+      badgeText: `🚨 DEADLINE PASSED (${daysLabel})`,
+      badgeVariant: 'danger', // Bright RED floating badge!
+      statusText: `The submission deadline (${deadlineText}) HAS PASSED. Check for extension or penalty clauses immediately.`,
+      days: -pastDays,
+    };
+  }
+
+  // Future deadline
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+
+  const hasTimeComponent = /:\d{2}/.test(deadlineText);
+  let timeStr = '';
+
+  if (days > 0) {
+    timeStr = `${days} DAY${days === 1 ? '' : 'S'}`;
+    if (hasTimeComponent && hours > 0) {
+      timeStr += `, ${hours} HR${hours === 1 ? '' : 'S'}`;
+    }
+    timeStr += ' REMAINING';
+  } else if (hours > 0 || minutes > 0) {
+    timeStr = `${hours} HR${hours === 1 ? '' : 'S'}`;
+    if (hasTimeComponent && minutes > 0) {
+      timeStr += `, ${minutes} MIN`;
+    }
+    timeStr += ' REMAINING';
+  } else {
+    timeStr = 'DUE VERY SOON';
+  }
+
+  const variant = days <= 3 ? 'danger' : days <= 7 ? 'warn' : 'success';
+
+  return {
+    isPassed: false,
+    badgeText: `⏳ ${timeStr}`,
+    badgeVariant: variant,
+    statusText: `You have ${timeStr.toLowerCase()} before the submission cut-off (${deadlineText}).`,
+    days,
+    hours,
+    minutes,
+  };
 }
 
 function urgencyFromDeadline(deadlineText) {
@@ -412,56 +558,25 @@ function howOutputCameExplanationCard(analysis, notice) {
 
 function noticeTimelineCard(analysis, notice) {
   const deadlineVal = (analysis.deadline || '').trim();
-  const days = daysUntil(deadlineVal);
+  const timeInfo = getDeadlineTimeInfo(deadlineVal);
 
   const importantDates = notice?.important_dates || [];
   const issueDateObj = importantDates.find((d) =>
     (d.label || '').toLowerCase().includes('issue') ||
     (d.label || '').toLowerCase().includes('notice date') ||
-    (d.label || '').toLowerCase().includes('date of notice')
+    (d.label || '').toLowerCase().includes('date of notice') ||
+    (d.label || '').toLowerCase().includes('quotation date')
   );
   const issueDate = issueDateObj
     ? issueDateObj.value
     : (analysis.notice_date || 'Extracted from notice header');
 
-  let statusBadge = '';
-  let statusText = '';
-  let alertVariant = 'info';
-
-  if (days !== null) {
-    if (days < 0) {
-      statusBadge = badge(`🚨 OVERDUE (${Math.abs(days)} DAYS PAST)`, 'danger', true);
-      statusText = `The submission/compliance deadline was ${deadlineVal}. The deadline has passed — check for extension or penalty clauses immediately.`;
-      alertVariant = 'danger';
-    } else if (days === 0) {
-      statusBadge = badge('⚠️ DUE TODAY', 'warn', true);
-      statusText = `Today is the final day to submit your response or complete required action!`;
-      alertVariant = 'warn';
-    } else {
-      statusBadge = badge(
-        `⏳ ${days} DAY${days === 1 ? '' : 'S'} REMAINING`,
-        days <= 7 ? 'warn' : 'success',
-        true,
-      );
-      statusText = `You have ${days} day(s) left before the submission deadline (${deadlineVal}).`;
-      alertVariant = days <= 7 ? 'warn' : 'success';
-    }
-  } else if (deadlineVal) {
-    const isImmediate =
-      deadlineVal.toLowerCase().includes('immediate') ||
-      deadlineVal.toLowerCase().includes('earliest');
-    statusBadge = badge(
-      isImmediate ? '🚨 IMMEDIATE ACTION' : '⏰ DEADLINE SPECIFIED',
-      isImmediate ? 'danger' : 'brand',
-      true,
-    );
-    statusText = `Specified Deadline: ${deadlineVal}. Follow the action plan to comply without delay.`;
-    alertVariant = isImmediate ? 'danger' : 'info';
-  } else {
-    statusBadge = badge('ℹ️ NO EXPLICIT DEADLINE', 'muted', true);
-    statusText =
-      'No explicit calendar deadline was found in the text. Standard statutory response timelines apply.';
-  }
+  const statusBadge = badge(timeInfo.badgeText, timeInfo.badgeVariant, true);
+  const alertVariant = timeInfo.isPassed
+    ? 'danger'
+    : timeInfo.days !== null && timeInfo.days <= 7
+    ? 'warn'
+    : 'info';
 
   return `<div class="card card--flat" style="border:1px solid var(--border);border-radius:14px;background:var(--bg-surface);padding:1.25rem;margin-bottom:1rem">
     <div class="row-between" style="margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem">
@@ -480,13 +595,13 @@ function noticeTimelineCard(analysis, notice) {
 
       <div style="background:var(--bg-subtle);padding:0.85rem 1rem;border-radius:10px;border:1px solid var(--border-light)">
         <span class="small muted" style="text-transform:uppercase;letter-spacing:0.5px;font-weight:600;display:block">⏰ Submission / Cut-off Deadline</span>
-        <strong style="font-size:1.05rem;color:${days !== null && days < 0 ? 'var(--danger)' : 'var(--brand)'};display:block;margin-top:0.2rem">${esc(deadlineVal || 'Not Specified')}</strong>
+        <strong style="font-size:1.05rem;color:${timeInfo.isPassed ? 'var(--danger)' : 'var(--brand)'};display:block;margin-top:0.2rem">${esc(deadlineVal || 'Not Specified')}</strong>
         <span class="small muted" style="font-size:0.82rem;display:block;margin-top:0.15rem">Target date to submit or respond</span>
       </div>
     </div>
 
     <div class="alert alert--${alertVariant}" style="font-size:0.92rem;line-height:1.5">
-      <strong>Timeline Status:</strong> ${esc(statusText)}
+      <strong>Timeline Status:</strong> ${esc(timeInfo.statusText)}
     </div>
 
     ${importantDates.length ? `<div style="margin-top:0.9rem;padding-top:0.8rem;border-top:1px dashed var(--border)">
