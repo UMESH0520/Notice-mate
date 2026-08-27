@@ -83,11 +83,10 @@ class _Availability:
 _availability = _Availability()
 
 
-# --- Error classification --------------------------------------------------
 def _classify_error(exc: Exception) -> str:
     """Map an AI exception onto an availability mode."""
     text = f"{type(exc).__name__}: {exc}".lower()
-    if "insufficient_quota" in text or "exceeded your current quota" in text:
+    if "insufficient_quota" in text or "exceeded your current quota" in text or "429" in text or "resource_exhausted" in text:
         return MODE_QUOTA
     if "authenticationerror" in text or "invalid_api_key" in text or "401" in text:
         return MODE_UNREACHABLE
@@ -105,8 +104,6 @@ def ai_mode() -> str:
     """Current AI mode for /health and the UI. Never optimistic."""
     if not settings.ai_enabled:
         return MODE_FALLBACK
-    if _is_gemini_key():
-        return MODE_OPENAI
     return _availability.mode or MODE_OPENAI
 
 
@@ -118,8 +115,6 @@ def ai_available() -> bool:
     """True when a live AI call is worth attempting."""
     if not settings.ai_enabled:
         return False
-    if _is_gemini_key():
-        return True
     return _availability.mode in ("", MODE_OPENAI)
 
 
@@ -382,6 +377,26 @@ def analyze_notice(
             return AnalysisResult(merged, SOURCE_CURATED)
         except Exception as exc:  # pragma: no cover - curated data is ours
             logger.warning("curated analysis invalid, falling back: %s", exc)
+
+    if ai_available():
+        client = _get_client()
+        if client is not None:
+            try:
+                if images:
+                    data = _vision_json(client, prompts.vision_extraction_prompt(), images)
+                else:
+                    safe_text = neutralize_for_prompt(effective_text)
+                    data = _chat_json(client, prompts.extraction_prompt(safe_text, _page_note(effective_text)))
+                if data and isinstance(data, dict) and data.get("title"):
+                    ai_analysis = NoticeAnalysisSchema(**data)
+                    _record(MODE_OPENAI)
+                    merged = _merge(baseline, ai_analysis)
+                    _note_injection(merged, effective_text)
+                    return AnalysisResult(merged, SOURCE_OPENAI)
+            except Exception as exc:
+                mode = _classify_error(exc)
+                _record(mode, str(exc))
+                logger.info("AI analysis failed (%s), using statutory analysis: %s", mode, exc)
 
     _note_injection(baseline, effective_text)
     return AnalysisResult(baseline, SOURCE_FALLBACK)
