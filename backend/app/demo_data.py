@@ -426,8 +426,129 @@ This synthetic notice is provided only for demonstration purposes.
             ),
         },
     },
-]
+    # -------------------------------- 4. REAL KARNATAKA LIFT NOTICE (USER IMAGE)
+    {
+        "id": "karnataka-lift-notice-2023",
+        "title": "Electrical Inspectorate — Unauthorised Lift Notice & License Warning",
+        "category": "Safety / Electrical Inspection",
+        "icon": "shield",
+        "authority": "Government of Karnataka, Office of The Electrical Inspector, Bengaluru South",
+        "blurb": "Unauthorised running of 30 OTIS Lifts in Tower 4 & 5 without license. Immediate switch-off directed.",
+        "raw_text": f"""Government of Karnataka
+(Electrical Inspectorate)
+No: EI/BS/AEI(T)/ UN Lift/2641-45/2023-24
+Office of The Electrical Inspector,
+Bengaluru South, No: 95, 1st Floor, Gandhi Bazar Main Road, Basavanagudi, Bangalore-560 004
+Date: 10 AUG 2023
 
+To,
+M/s India Heritage Trust and ISKCON Charities
+GPA M/s Castle Vista Pvt Ltd, Mantri Serenity
+Vasanthapura Village and Doddakallasandra Village
+Uttarahalli Hobli, Bengaluru-560062
+
+Sir,
+Sub:- Unauthorised running of Lifts without obtaining the Lifts approval: Reg.
+
+With reference to the above, we write to inform you that, it has been observed by the undersigned that, you are running 30 numbers of OTIS Lifts Unauthorisedly at M/s India Heritage Trust and ISKCON Charities GPA M/s Castle Vista Pvt Ltd, Mantri Serenity Vasanthapura Village and Doddakallasandra Village Uttarahalli Hobli, Bengaluru-560062 in Tower 4 and 5, without obtaining Lifts approvals from this department. It is necessary to obtain the Lift license as per The New Karnataka Lifts, Escalators and Passenger Conveyors Rules, 2015 from this Department.
+
+Hence it is hereby informed to Switch OFF the lift until necessary approvals is obtained and here by informed to obtain the approval from this office at the earliest failing which action shall be initiated as per Karnataka Lifts Escalators and Passenger Conveyors Rules, 2015.
+
+Yours faithfully,
+Electrical Inspector, Bengaluru South
+
+Inward Stamp: Office of Electrical Inspector, Bengaluru South, No. 949, Date: 11/8/23
+""",
+        "analysis": {
+            "notice_type": "Official Safety Violation Notice — Unauthorised Operation of Lifts",
+            "authority": "Government of Karnataka (Electrical Inspectorate), Bengaluru South",
+            "notice_date": "10 August 2023",
+            "deadline": "Immediate / At the earliest",
+            "reference_number": "EI/BS/AEI(T)/UN Lift/2641-45/2023-24",
+            "subject": "Unauthorised running of 30 OTIS Lifts in Tower 4 & 5 without obtaining Lift approval",
+            "summary": (
+                "The Electrical Inspectorate of Bengaluru South inspected your premises at Mantri Serenity "
+                "(Tower 4 and 5) and found 30 OTIS lifts running without mandatory departmental approval. "
+                "You are instructed to Switch OFF all 30 lifts immediately and apply for official Lift Licenses "
+                "under the Karnataka Lifts, Escalators and Passenger Conveyors Rules, 2015."
+            ),
+            "why_received": (
+                "Received because 30 OTIS elevators were found operational in Tower 4 & 5 without obtaining "
+                "the required Lift Approval and Safety Inspection License from the Government of Karnataka Electrical Inspectorate."
+            ),
+            "required_action": (
+                "1. Switch OFF the 30 OTIS lifts immediately for safety compliance.\n"
+                "2. Submit Lift License applications along with safety inspection certificates at the Electrical Inspectorate office at Gandhi Bazar Main Road, Basavanagudi."
+            ),
+            "consequences": (
+                "Failing to obtain approvals will lead to legal prosecution and penal action under the "
+                "Karnataka Lifts, Escalators and Passenger Conveyors Rules, 2015."
+            ),
+            "required_documents": [
+                {"name": "OTIS Lift Installation & Test Certificate", "reason": "Mandatory technical safety certificate for elevators.", "required": True},
+                {"name": "Building Sanctioned Plan & Layout Approval", "reason": "Proof of authorized building structure for Tower 4 & 5.", "required": True},
+                {"name": "Electrical Installation Inspection Report (BESCOM)", "reason": "Verifies electrical load and safety clearance.", "required": True},
+                {"name": "Form A Application under Karnataka Lifts Rules 2015", "reason": "Formal application form for obtaining lift operation license.", "required": True},
+            ],
+            "next_steps": [
+                "Issue safety notice to residents & Switch OFF 30 OTIS lifts in Tower 4 & 5",
+                "Gather OTIS technical safety inspection & test reports",
+                "Prepare Form A Lift License Application under Karnataka Rules 2015",
+                "Submit application to Office of The Electrical Inspector, Basavanagudi, Bangalore",
+                "Obtain official lift license clearance certificate",
+            ],
+            "uncertainties": [
+                "Check if temporary approval or conditional running permit can be requested while final inspection is scheduled.",
+            ],
+            "confidence": 0.98,
+            "translations": {
+                "hi": {
+                    "summary": "कर्नाटक सरकार के विद्युत निरीक्षक कार्यालय (बेंगलुरु दक्षिण) ने पाया कि मंत्री सेरेनिटी (टावर 4 और 5) में 30 ओटीआईएस लिफ्ट बिना अनुमति के चल रही हैं। आपको लिफ्ट बंद करने और कर्नाटक लिफ्ट नियम 2015 के तहत तुरंत लाइसेंस प्राप्त करने का निर्देश दिया गया है।",
+                    "why_received": "यह नोटिस इसलिए आया क्योंकि विद्युत निरीक्षक विभाग की पूर्व स्वीकृति के बिना 30 लिफ्ट चालू पाई गईं।",
+                    "required_action": "तुरंत लिफ्ट बंद करें और बसवनगुडी स्थित विद्युत निरीक्षक कार्यालय में सुरक्षा दस्तावेजों के साथ लाइसेंस हेतु आवेदन करें।",
+                    "consequences": "पालन न करने पर कर्नाटक लिफ्ट अधिनियम 2015 के तहत कानूनी और दंडात्मक कार्रवाई की जाएगी।",
+                },
+                "te": {
+                    "summary": "కర్ణాటక ప్రభుత్వ ఎలక్ట్రికల్ ఇన్‌స్పెక్టరేట్ మంత్రీ సెరెనిటీ (టవర్ 4 & 5) లో 30 OTIS లిఫ్ట్‌లు అనుమతి లేకుండా నడుస్తున్నట్లు గుర్తించింది. లిఫ్ట్‌లను వెంటనే నిలిపివేసి, కర్ణాటక లిఫ్ట్స్ రూల్స్ 2015 కింద లైసెన్స్ పొందాలని ఆదేశించారు.",
+                    "why_received": "శాఖ అనుమతి మరియు భద్రతా లైసెన్స్ లేకుండా 30 లిఫ్ట్‌లు నడుపుతున్నందున ఈ నోటీసు ఇవ్వబడింది.",
+                    "required_action": "వెంటనే లిఫ్ట్‌లను నిలిపివేసి, బసవనగుడి ఎలక్ట్రికల్ ఇన్‌స్పెక్టర్ కార్యాలయంలో లైసెన్స్ కోసం దరఖాస్తు చేయండి.",
+                    "consequences": "ఉల్లంఘిస్తే కర్ణాటక లిఫ్ట్స్ చట్టం 2015 కింద చర్యలు తీసుకోబడతాయి.",
+                },
+            },
+        },
+        "response_template": {
+            "en": (
+                "To,\nThe Electrical Inspector, Bengaluru South\n"
+                "Office of The Electrical Inspector, No: 95, 1st Floor, Gandhi Bazar Main Road, Basavanagudi, Bangalore-560 004\n\n"
+                "Subject: Response & Compliance Report for Notice No: EI/BS/AEI(T)/UN Lift/2641-45/2023-24 regarding Lift Approvals at Mantri Serenity (Tower 4 & 5)\n\n"
+                "Respected Sir,\n\n"
+                "With reference to your notice dated 10 August 2023 regarding 30 numbers of OTIS Lifts in Tower 4 and 5, we wish to state that we have noted your directives with utmost priority.\n\n"
+                "1. Compliance Action: As instructed, necessary safety protocols have been initiated for the OTIS Lifts in Tower 4 & 5.\n"
+                "2. Lift License Application: We are enclosing herewith Form A applications along with OTIS Technical Safety Test Certificates, Electrical Sanction Plans, and Inspectorate Fee Receipts as per The New Karnataka Lifts, Escalators and Passenger Conveyors Rules, 2015.\n\n"
+                "We kindly request you to inspect the installation at your earliest convenience and issue the official Lift License approvals.\n\n"
+                "Thanking you,\n"
+                "Yours faithfully,\n"
+                "For M/s India Heritage Trust and ISKCON Charities / M/s Castle Vista Pvt Ltd\n"
+                "Authorized Signatory\nDate: [Current Date]"
+            ),
+            "hi": (
+                "सेवा में,\nविद्युत निरीक्षक, बेंगलुरु दक्षिण\n"
+                "कार्यालय विद्युत निरीक्षक, गांधी बाजार मेन रोड, बसवनगुडी, बैंगलोर-560 004\n\n"
+                "विषय: नोटिस EI/BS/AEI(T)/UN Lift/2641-45/2023-24 का अनुपालन रिपोर्ट\n\n"
+                "महोदय,\n\n"
+                "दिनांक 10 अगस्त 2023 के नोटिस के संदर्भ में, हम सूचित करते हैं कि टावर 4 और 5 की 30 ओटीआईएस लिफ्टों हेतु आवश्यक लाइसेंस आवेदन पत्र (Form A) तथा सुरक्षा परीक्षण प्रमाणपत्र संलग्न कर प्रस्तुत किए जा रहे हैं।\n\n"
+                "कृपया शीघ्र निरीक्षण कर लाइसेंस स्वीकृति प्रदान करने की कृपा करें।\n\nधन्यवाद,\nअधिकृत हस्ताक्षरकर्ता"
+            ),
+            "te": (
+                "గౌరవనీయులైన,\nఎలక్ట్రికల్ ఇన్‌స్పెక్టర్, బెంగళూరు సౌత్\n"
+                "గాంధీ బజార్ మెయిన్ రోడ్, బసవనగుడి, బెంగళూరు-560 004\n\n"
+                "విషయం: నోటీసు EI/BS/AEI(T)/UN Lift/2641-45/2023-24 అనుకూలత నివేదిక\n\n"
+                "అయ్యా,\n\n"
+                "10 ఆగస్టు 2023 నాటి నోటీసు ప్రకారం, టవర్ 4 & 5 లోని 30 లిఫ్ట్‌లకు సంబంధించి లైసెన్స్ దరఖాస్తులు మరియు భద్రతా ధృవీకరణ పత్రాలు సమర్పిస్తున్నాము. దయచేసి పరిశీలించి అనుమతులు మంజూరు చేయగలరు.\n\nధన్యవాదాలు,\nఅధికారిక సంతకం"
+            ),
+        },
+    },
+]
 
 # The recruitment and scholarship notices live in their own module to keep this
 # file readable. They demonstrate the application/benefit workflows.

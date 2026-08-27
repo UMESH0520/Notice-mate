@@ -313,7 +313,7 @@ function directOfficialPortalBanner(analysis) {
       .join(' ');
     url = `https://www.google.com/search?q=${encodeURIComponent(queryStr)}`;
   }
-  const portalName = portal?.label || analysis.authority || analysis.department || 'Official Government Department Website';
+  const portalName = portal?.label || analysis.authority || analysis.department || 'Official Department Website';
 
   return `<div class="card card--accent" style="border:2px solid var(--brand);background:linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.12));padding:1.25rem;border-radius:14px;margin-bottom:1rem">
     <div class="row-between" style="flex-wrap:wrap;gap:1rem">
@@ -322,11 +322,53 @@ function directOfficialPortalBanner(analysis) {
           ${icon('shield', 14)} DIRECT OFFICIAL WEBSITE
         </span>
         <h3 style="margin:0.3rem 0;font-size:1.15rem;color:var(--text);font-weight:700">${esc(portalName)}</h3>
-        <p class="small muted" style="margin:0;line-height:1.5">Open the direct official government website to read full details, verify dates, or complete your online application.</p>
+        <p class="small muted" style="margin:0;line-height:1.5">Open the direct official portal website to read full details, verify dates, or complete your online application.</p>
       </div>
       <a href="${esc(url)}" target="_blank" rel="noopener noreferrer" class="btn btn--primary btn--md" style="display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;font-weight:700;padding:0.75rem 1.25rem;border-radius:8px;background:var(--brand);color:#fff">
         ${icon('external', 18)} Open Official Website
       </a>
+    </div>
+  </div>`;
+}
+
+function howRoadmapHelpsExplanationCard(roadmap) {
+  return `<div class="card card--flat" style="border:1px solid var(--border);background:var(--bg-surface);padding:1.25rem;border-radius:14px;margin-bottom:1rem">
+    <div class="row-between" style="margin-bottom:0.75rem">
+      <strong style="font-size:1.05rem;color:var(--brand);display:flex;align-items:center;gap:0.4rem">
+        ${icon('sparkles', 20)} How This Roadmap Helps You Apply & Understand
+      </strong>
+      ${badge('STEP-BY-STEP GUIDANCE', 'brand', true)}
+    </div>
+
+    <p style="font-size:0.93rem;line-height:1.55;color:var(--text);margin-bottom:1rem">
+      Complex government and private notices can be overwhelming. NoticeMate breaks down your notice into clear, prioritized stages so you always know what to do next without missing deadlines:
+    </p>
+
+    <div class="grid grid--2" style="gap:0.75rem">
+      <div style="background:var(--bg-subtle);padding:0.8rem;border-radius:10px">
+        <strong style="font-size:0.88rem;color:var(--text);display:flex;align-items:center;gap:0.3rem">
+          ${icon('checkCircle', 16)} 1. Sequential Progression
+        </strong>
+        <p class="small muted" style="margin-top:0.25rem;line-height:1.45">Steps are ordered by urgency and logical prerequisites so you never waste effort preparing documents before verifying requirements.</p>
+      </div>
+      <div style="background:var(--bg-subtle);padding:0.8rem;border-radius:10px">
+        <strong style="font-size:0.88rem;color:var(--text);display:flex;align-items:center;gap:0.3rem">
+          ${icon('clock', 16)} 2. Effort & Deadline Tracking
+        </strong>
+        <p class="small muted" style="margin-top:0.25rem;line-height:1.45">Every step estimates time required and highlights hard cut-off dates to prevent penalty or disqualification.</p>
+      </div>
+      <div style="background:var(--bg-subtle);padding:0.8rem;border-radius:10px">
+        <strong style="font-size:0.88rem;color:var(--text);display:flex;align-items:center;gap:0.3rem">
+          ${icon('doc', 16)} 3. Smart Document Prep
+        </strong>
+        <p class="small muted" style="margin-top:0.25rem;line-height:1.45">Tells you exactly which certificates, receipts, or forms to assemble before launching your response.</p>
+      </div>
+      <div style="background:var(--bg-subtle);padding:0.8rem;border-radius:10px">
+        <strong style="font-size:0.88rem;color:var(--text);display:flex;align-items:center;gap:0.3rem">
+          ${icon('external', 16)} 4. Official Portal Action
+        </strong>
+        <p class="small muted" style="margin-top:0.25rem;line-height:1.45">Provides direct links to the official issuing department website so you can submit safely on official channels.</p>
+      </div>
     </div>
   </div>`;
 }
@@ -362,6 +404,7 @@ export default async function plan({ main }) {
 
       <div class="stack">
         ${directOfficialPortalBanner(state.analysis)}
+        ${howRoadmapHelpsExplanationCard(roadmap)}
         ${heroNextStepCard(roadmap)}
         ${doThisNowSection(roadmap)}
         ${roadmapProgressBar(roadmap.completed, roadmap.total)}

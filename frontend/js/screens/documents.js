@@ -85,6 +85,32 @@ function docRow(doc) {
   </li>`;
 }
 
+function documentsGuideExplanationCard(docs) {
+  return `<div class="card card--flat" style="border:1px solid var(--border);background:var(--bg-surface);padding:1.25rem;border-radius:14px;margin-bottom:1rem">
+    <div class="row-between" style="margin-bottom:0.75rem">
+      <strong style="font-size:1.05rem;color:var(--brand);display:flex;align-items:center;gap:0.4rem">
+        ${icon('sparkles', 20)} Required Documents Guidance
+      </strong>
+      ${badge(`${docs.length} DOCUMENT${docs.length === 1 ? '' : 'S'} LISTED`, 'brand', true)}
+    </div>
+
+    <p style="font-size:0.93rem;line-height:1.55;color:var(--text);margin-bottom:0.8rem">
+      NoticeMate extracted these specific required documents directly from your notice provisions. Having these ready ensures your application or response is complete and avoids delays or rejections:
+    </p>
+
+    <div class="stack stack--sm">
+      <div style="background:var(--bg-subtle);padding:0.75rem 0.9rem;border-radius:10px">
+        <strong style="font-size:0.88rem;color:var(--text)">📄 Why These Documents Matter</strong>
+        <p class="small muted" style="margin-top:0.2rem;line-height:1.45">Each document serves as proof for specific claims mentioned in the notice (e.g., tax deductions, identity validation, utility bill history, or deposit receipts).</p>
+      </div>
+      <div style="background:var(--bg-subtle);padding:0.75rem 0.9rem;border-radius:10px">
+        <strong style="font-size:0.88rem;color:var(--text)">🔍 Honest Document Checking</strong>
+        <p class="small muted" style="margin-top:0.2rem;line-height:1.45">Upload your document to run basic structure and date checks. NoticeMate never stores sensitive files off-device or sends them to any external system.</p>
+      </div>
+    </div>
+  </div>`;
+}
+
 export default async function documents({ main }) {
   if (!requireNotice()) return;
 
@@ -103,6 +129,8 @@ export default async function documents({ main }) {
           title: t('docs.title'),
           subtitle: t('docs.subtitle'),
         })}
+
+        ${documentsGuideExplanationCard(docs)}
 
         ${
           docs.length

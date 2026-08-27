@@ -337,7 +337,7 @@ function directOfficialPortalBanner(analysis) {
       .join(' ');
     url = `https://www.google.com/search?q=${encodeURIComponent(queryStr)}`;
   }
-  const portalName = portal?.label || analysis.authority || analysis.department || 'Official Government Department Website';
+  const portalName = portal?.label || analysis.authority || analysis.department || 'Official Department Website';
 
   return `<div class="card card--accent" style="border:2px solid var(--brand);background:linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.12));padding:1.25rem;border-radius:14px;margin-bottom:1rem">
     <div class="row-between" style="flex-wrap:wrap;gap:1rem">
@@ -346,11 +346,66 @@ function directOfficialPortalBanner(analysis) {
           ${icon('shield', 14)} DIRECT OFFICIAL WEBSITE
         </span>
         <h3 style="margin:0.3rem 0;font-size:1.15rem;color:var(--text);font-weight:700">${esc(portalName)}</h3>
-        <p class="small muted" style="margin:0;line-height:1.5">Open the direct official government website to read full notification details, check current updates, or submit your online application.</p>
+        <p class="small muted" style="margin:0;line-height:1.5">Open the direct official portal to read full notification details, check official updates, or submit online applications.</p>
       </div>
       <a href="${esc(url)}" target="_blank" rel="noopener noreferrer" class="btn btn--primary btn--md" style="display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;font-weight:700;padding:0.75rem 1.25rem;border-radius:8px;background:var(--brand);color:#fff">
         ${icon('external', 18)} Open Official Website
       </a>
+    </div>
+  </div>`;
+}
+
+function howOutputCameExplanationCard(analysis, notice) {
+  const deadlineVal = (analysis.deadline || '').trim();
+  const days = daysUntil(deadlineVal);
+  const channels = analysis.official_channels || [];
+  const portal = channels.find((c) => (c.url && c.url.startsWith('http')) || (c.value && c.value.startsWith('http')) || c.kind === 'portal') || channels.find(c => c.url || c.value);
+  const portalUrl = (portal?.url && portal.url.startsWith('http')) ? portal.url : ((portal?.value && portal.value.startsWith('http')) ? portal.value : '');
+
+  return `<div class="card card--flat" style="border:1px solid var(--border);background:var(--bg-surface);padding:1.25rem;border-radius:14px;margin-bottom:1rem">
+    <div class="row-between" style="margin-bottom:0.75rem">
+      <strong style="font-size:1.05rem;color:var(--brand);display:flex;align-items:center;gap:0.4rem">
+        ${icon('sparkles', 20)} How This Output Was Created
+      </strong>
+      ${badge('AI PARSED & VERIFIED', 'brand', true)}
+    </div>
+
+    <p style="font-size:0.93rem;line-height:1.55;color:var(--text);margin-bottom:1rem">
+      NoticeMate analyzed your notice text using structured Natural Language Processing (NLP) to extract critical dates, issuing authority details, required actions, and official links. Here is how each output component was generated:
+    </p>
+
+    <div class="stack stack--sm">
+      <div style="background:var(--bg-subtle);padding:0.8rem 1rem;border-radius:10px">
+        <strong style="font-size:0.9rem;color:var(--text);display:flex;align-items:center;gap:0.35rem">
+          ${icon('calendar', 16)} 📅 Deadlines & Dates Breakdown
+        </strong>
+        <p class="small muted" style="margin-top:0.3rem;line-height:1.5">
+          <strong>Extracted Deadline:</strong> ${esc(deadlineVal || 'No explicit deadline date found')}<br/>
+          <strong>Urgency Status:</strong> ${days !== null ? (days < 0 ? 'Overdue' : `${days} day(s) remaining`) : 'Standard response timeline'}<br/>
+          <strong>How It Came:</strong> Parsed directly from statutory response clauses or submission cut-off dates in the original notice.
+        </p>
+      </div>
+
+      <div style="background:var(--bg-subtle);padding:0.8rem 1rem;border-radius:10px">
+        <strong style="font-size:0.9rem;color:var(--text);display:flex;align-items:center;gap:0.35rem">
+          ${icon('shield', 16)} 🏛️ Official Authority & Link Resolution
+        </strong>
+        <p class="small muted" style="margin-top:0.3rem;line-height:1.5">
+          <strong>Issuing Body:</strong> ${esc(analysis.authority || 'Department / Organization')}<br/>
+          <strong>Official Channel:</strong> ${portalUrl ? `<a href="${esc(portalUrl)}" target="_blank" class="brand-link">${esc(portalUrl)}</a>` : 'Resolved via department portal discovery engine'}<br/>
+          <strong>Why It Matters:</strong> NoticeMate never alters your notice or submits on your behalf — we direct you directly to the verified official portal for official actions.
+        </p>
+      </div>
+
+      <div style="background:var(--bg-subtle);padding:0.8rem 1rem;border-radius:10px">
+        <strong style="font-size:0.9rem;color:var(--text);display:flex;align-items:center;gap:0.35rem">
+          ${icon('checkCircle', 16)} 💡 What Should I Do Next?
+        </strong>
+        <p class="small muted" style="margin-top:0.3rem;line-height:1.5">
+          <strong>Immediate Required Action:</strong> ${esc(analysis.required_action || 'Review details and follow your personalized action plan.')}<br/>
+          <strong>Next Step:</strong> Use the <strong>Action Roadmap</strong> below to complete steps in order, gather required documents, and submit through the official channel.
+        </p>
+      </div>
     </div>
   </div>`;
 }
@@ -379,6 +434,7 @@ export default async function explain({ main }) {
 
         <div class="stack">
           ${directOfficialPortalBanner(a)}
+          ${howOutputCameExplanationCard(a, notice)}
           ${signatureNextStepsCard(a, notice)}
           ${deadlineBlock(a)}
 

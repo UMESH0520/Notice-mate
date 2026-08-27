@@ -4,22 +4,22 @@
  * DEMO PROTOTYPE — NOT AN OFFICIAL GOVERNMENT SERVICE.
  */
 
-import api from './api.js';
-import { register, setNotFound, start, render, navigate } from './router.js';
-import { state, setState } from './state.js';
-import { applyStaticTranslations, setLanguage, t } from './i18n.js';
-import { emptyState, toast } from './ui.js';
+import api from './api.js?v=10';
+import { register, setNotFound, start, render, navigate } from './router.js?v=10';
+import { state, setState } from './state.js?v=10';
+import { applyStaticTranslations, setLanguage, t } from './i18n.js?v=10';
+import { emptyState, toast } from './ui.js?v=10';
 
-import welcome from './screens/welcome.js';
-import inputScreen from './screens/input.js';
-import processing from './screens/processing.js';
-import explain from './screens/explain.js';
-import plan from './screens/plan.js';
-import documents from './screens/documents.js';
-import responseScreen from './screens/response.js';
-import review from './screens/review.js';
-import confirmation from './screens/confirmation.js';
-import statusScreen from './screens/status.js';
+import welcome from './screens/welcome.js?v=10';
+import inputScreen from './screens/input.js?v=10';
+import processing from './screens/processing.js?v=10';
+import explain from './screens/explain.js?v=10';
+import plan from './screens/plan.js?v=10';
+import documents from './screens/documents.js?v=10';
+import responseScreen from './screens/response.js?v=10';
+import review from './screens/review.js?v=10';
+import confirmation from './screens/confirmation.js?v=10';
+import statusScreen from './screens/status.js?v=10';
 
 /* ---- Routes -------------------------------------------------------------- */
 register('/', welcome);

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoticeMate 2-Minute MP4 Demo (Studio Neural AI Voiceover)</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 24px;
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #38bdf8;
+            margin: 0 0 8px 0;
+            font-size: 2.2rem;
+        }
+        .badge-neural {
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            color: #ffffff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.05rem;
+            display: inline-block;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        }
+        .video-box {
+            width: 100%;
+            max-width: 1200px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            border: 3px solid #4338ca;
+            background: #1e293b;
+        }
+        video.demo-video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .table-box {
+            margin-top: 30px;
+            max-width: 1200px;
+            width: 100%;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #334155;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #334155;
+        }
+        th {
+            color: #38bdf8;
+        }
+        code {
+            background: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #f43f5e;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span class="badge-neural">🎙️ STUDIO-QUALITY NEURAL AI VOICEOVER (Christopher Neural Voice)</span>
+        <h1>NoticeMate 2-Minute MP4 Full Video Demo</h1>
+        <p>This MP4 video features a natural, professional human-like voice narrator explaining the complete NoticeMate code flow, backend architecture, database initialization, OpenAI prompt parsing, roadmap engine state machine, and official receipt hashing.</p>
+    </div>
+
+    <div class="video-box">
+        <video class="demo-video" controls autoplay>
+            <source src="notice_mate_2min_demo.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <div class="table-box">
+        <h2 style="color:#10b981; margin-top:0;">🎙️ Natural Neural Voiceover Narration Script</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Professional Neural Voiceover Audio Script</th>
+                    <th>Under the Hood System Execution</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><b>00:00 - 00:15</b></td>
+                    <td>"Hello and welcome to NoticeMate! NoticeMate is an independent platform that simplifies and assists users to understand any government or private notice — turning complex legalese into clear, actionable steps for any user. In this technical demonstration, we will explore how NoticeMate operates under the hood using FastAPI, SQLModel SQLite, and OpenAI GPT parsing."</td>
+                    <td><code>FastAPI entrypoint (main.py) initializes SQLModel DB tables and mounts Next.js frontend SPA.</code></td>
+                </tr>
+                <tr>
+                    <td><b>00:15 - 00:30</b></td>
+                    <td>"First, when a user selects a notice, the frontend sends a POST request to /api/notices/demo. FastAPI initializes a new Notice record in our local SQLite database."</td>
+                    <td><code>POST /api/notices/demo receives demo_id 'tax-143-1' and creates a persistent Notice object.</code></td>
+                </tr>
+                <tr>
+                    <td><b>00:30 - 00:45</b></td>
+                    <td>"Second, NoticeMate's extraction engine in services/ai.py invokes OpenAI structured prompts. It extracts key metrics including the authority, reference number, response deadline of September 11th, and the financial mismatch of 17,500 rupees."</td>
+                    <td><code>POST /api/notices/{id}/analyze calls services/ai.py with Pydantic output contracts.</code></td>
+                </tr>
+                <tr>
+                    <td><b>00:45 - 01:00</b></td>
+                    <td>"Third, on the Explain page, dense statutory terms like Section 143(1) are decoded into clear, plain language, highlighting why the notice was received and potential penalty risks."</td>
+                    <td><code>GET /api/notices/{id}?language=en serializes plain-language dictionaries and risk impact rules.</code></td>
+                </tr>
+                <tr>
+                    <td><b>01:00 - 01:15</b></td>
+                    <td>"Fourth, the Roadmap engine in services/roadmap.py dynamically constructs a 4-step action checklist, guiding citizens from review to final submission."</td>
+                    <td><code>GET /api/notices/{id}/roadmap computes step sequence order and priority badges.</code></td>
+                </tr>
+                <tr>
+                    <td><b>01:15 - 01:30</b></td>
+                    <td>"Fifth, the Document Checklist verifies required proof files, such as Form 16, Bank Interest Certificates, and PPF Deposit passbooks."</td>
+                    <td><code>GET /api/notices/{id}/documents verifies uploaded file readiness and completeness score.</code></td>
+                </tr>
+                <tr>
+                    <td><b>01:30 - 01:45</b></td>
+                    <td>"Sixth, NoticeMate auto-generates a formal legal response letter clarifying that the 17,500 rupee mismatch is tax-exempt interest under Section 10(11)."</td>
+                    <td><code>POST /api/notices/{id}/response invokes services/responses.py to generate ResponseDraft version 1.</code></td>
+                </tr>
+                <tr>
+                    <td><b>01:45 - 02:00</b></td>
+                    <td>"Finally, upon submission, NoticeMate hashes the response package and generates an official cryptographic receipt ID: NM-SUB-2026-X892, providing timestamped proof of completion. Thank you for watching!"</td>
+                    <td><code>POST /api/notices/{id}/submit updates workflow_state to 'submitted' and generates receipt NM-SUB-2026-X892.</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

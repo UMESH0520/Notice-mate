@@ -60,10 +60,13 @@ export async function render() {
     console.error('[NoticeMate Router Error]', err);
     if (main) {
       main.innerHTML = `<section class="screen">
-        <div class="card" style="margin-top:2rem;text-align:center;padding:2rem">
-          <h2 style="font-size:1.2rem;margin-bottom:0.5rem">NoticeMate Assistant</h2>
-          <p style="color:var(--text-soft);margin-bottom:1.2rem">An unexpected error occurred or the notice was reset.</p>
-          <button class="btn btn--primary" onclick="location.hash='#/'" style="margin:0 auto">Return to Welcome Screen</button>
+        <div class="card" style="margin-top:2rem;text-align:center;padding:2.2rem;border-radius:14px;background:var(--bg-surface)">
+          <h2 style="font-size:1.25rem;margin-bottom:0.5rem;color:var(--text)">NoticeMate Assistant</h2>
+          <p style="color:var(--text-soft);margin-bottom:1.25rem;line-height:1.5">Your session was refreshed or you can choose a notice to analyze.</p>
+          <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn--primary" onclick="location.hash='#/input?tab=demo'">Select a Notice</button>
+            <button class="btn btn--secondary" onclick="location.hash='#/'">Welcome Screen</button>
+          </div>
         </div>
       </section>`;
     }

@@ -1,10 +1,10 @@
 /** Screen 2 — Notice input: sample notice, file upload, or pasted text. */
 
-import api from '../api.js';
-import { navigate } from '../router.js';
-import { state, setState, resetNotice } from '../state.js';
-import { t } from '../i18n.js';
-import { icon, categoryIcon } from '../icons.js';
+import api from '../api.js?v=10';
+import { navigate } from '../router.js?v=10';
+import { state, setState, resetNotice } from '../state.js?v=10';
+import { t } from '../i18n.js?v=10';
+import { icon, categoryIcon } from '../icons.js?v=10';
 import {
   alert,
   button,
@@ -16,8 +16,8 @@ import {
   screenHead,
   setBusy,
   spinner,
-} from '../ui.js';
-import { friendlyError, showError } from './shared.js';
+} from '../ui.js?v=10';
+import { friendlyError, showError } from './shared.js?v=10';
 
 const TABS = [
   ['demo', 'input.tabDemo', 'eye'],
@@ -103,10 +103,38 @@ function pastePanel() {
   </div>`;
 }
 
+function noticeSubmissionGuide() {
+  return `<div class="card card--accent" style="border-left:4px solid var(--brand);background:var(--bg-subtle);margin-bottom:1.25rem;padding:1.1rem 1.25rem;border-radius:14px">
+    <div class="row-between" style="flex-wrap:wrap;gap:0.5rem;margin-bottom:0.6rem">
+      <strong style="color:var(--brand);font-size:1.05rem;display:flex;align-items:center;gap:0.45rem">
+        ${icon('sparkles', 20)} How NoticeMate Works For You
+      </strong>
+      ${badge('GOVERNMENT & PRIVATE NOTICES', 'brand', true)}
+    </div>
+    <p style="font-size:0.94rem;line-height:1.6;color:var(--text);margin-bottom:0.8rem">
+      NoticeMate is an independent platform that simplifies and assists users to understand any government or private notice, official letter, or bill — turning dense legalese into simple, step-by-step guidance.
+    </p>
+    <div class="grid grid--2" style="gap:0.75rem">
+      <div style="background:var(--bg-surface);padding:0.75rem 0.9rem;border-radius:10px;border:1px solid var(--border-light)">
+        <strong style="font-size:0.88rem;color:var(--text);display:flex;align-items:center;gap:0.3rem">
+          ${icon('doc', 16)} 1. Add Any Notice
+        </strong>
+        <p class="small muted" style="margin-top:0.25rem;line-height:1.45">Select a sample notice, upload a PDF/Image, or paste text from any government department or private organization.</p>
+      </div>
+      <div style="background:var(--bg-surface);padding:0.75rem 0.9rem;border-radius:10px;border:1px solid var(--border-light)">
+        <strong style="font-size:0.88rem;color:var(--text);display:flex;align-items:center;gap:0.3rem">
+          ${icon('sparkles', 16)} 2. Get Plain-English Output
+        </strong>
+        <p class="small muted" style="margin-top:0.25rem;line-height:1.45">Instantly see deadlines, key dates, direct official website links, required documents, and what steps to take next.</p>
+      </div>
+    </div>
+  </div>`;
+}
+
 /* ---- Screen -------------------------------------------------------------- */
 
-export default async function input({ main, query }) {
-  const activeTab = TABS.some(([k]) => k === query.tab) ? query.tab : 'demo';
+export default async function input({ main, query = {} } = {}) {
+  const activeTab = TABS.some(([k]) => k === query?.tab) ? query.tab : 'demo';
 
   main.innerHTML = `<section class="screen">
     ${progress(1)}
@@ -115,6 +143,7 @@ export default async function input({ main, query }) {
       title: t('input.title'),
       subtitle: t('input.subtitle'),
     })}
+    ${noticeSubmissionGuide()}
     <div class="tabs" role="tablist" aria-label="${esc(t('input.subtitle'))}">
       ${TABS.map(
         ([key, label, ico]) => `<button class="tab" role="tab" id="tab-${key}"

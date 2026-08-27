@@ -46,7 +46,7 @@ const en = {
 
   'welcome.badge': 'Understand any notice in minutes',
   'welcome.title1': 'Got a confusing',
-  'welcome.title2': 'government notice?',
+  'welcome.title2': 'government or private notice?',
   'welcome.sub':
     'NoticeMate explains it in plain language, tells you exactly what to do, and walks you through every step.',
   'welcome.cta': 'Get started',
