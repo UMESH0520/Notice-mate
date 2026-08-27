@@ -48,7 +48,7 @@ async def upload_notice(
     session_id: str | None = Form(default=None),
     db: Session = Depends(get_session),
 ) -> NoticeOut:
-    """Create a notice from an uploaded file (PDF/image/text)."""
+    """Create a notice from an uploaded file (PDF/image/text) instantly."""
     filename = sanitize_filename(file.filename)
     try:
         ext = validate_extension(filename)
@@ -61,26 +61,19 @@ async def upload_notice(
     except UploadError as exc:
         raise HTTPException(status_code=413, detail=str(exc)) from exc
 
-    try:
-        extracted = await asyncio.wait_for(
-            asyncio.to_thread(extraction.extract, content, ext), timeout=25.0
-        )
-    except asyncio.TimeoutError:
-        logger.warning("Extraction timed out for file: %s", filename)
-        extracted = extraction.ExtractedInput(
-            text=f"[Uploaded Document Image: {filename}]",
-            images=[(content, extraction._MIME.get(ext, "image/png"))],
-            kind="image",
-        )
-    except Exception as exc:
-        logger.warning("Extraction error: %s", exc)
-        extracted = extraction.ExtractedInput(
-            text=f"[Uploaded Document Image: {filename}]",
-            images=[(content, extraction._MIME.get(ext, "image/png"))],
-            kind="image",
-        )
+    # PDFs and Text files extract text instantly (<10ms)
+    note = ""
+    if ext == ".txt":
+        raw_text = extraction._decode_text(content).strip()
+    elif ext == ".pdf":
+        extracted_pdf = extraction._extract_pdf(content)
+        raw_text = extracted_pdf.text.strip()
+        note = extracted_pdf.note
+    else:
+        # Images: return immediately (<10ms) so user transitions instantly to Processing screen
+        raw_text = f"[Uploaded Document Image: {filename}]"
 
-    raw_text = extracted.text.strip() or f"[Uploaded Document Image: {filename}]"
+    raw_text = raw_text or f"[Uploaded Document Image: {filename}]"
 
     notice = notice_svc.create_from_text(
         db, text=raw_text, filename=filename, session_id=session_id, source="upload"
@@ -94,8 +87,8 @@ async def upload_notice(
     except Exception as exc:
         logger.warning("Failed to save uploaded file: %s", exc)
 
-    if extracted.note:
-        workflow.log_event(db, notice, "note", extracted.note)
+    if note:
+        workflow.log_event(db, notice, "note", note)
         db.commit()
     out = NoticeOut.model_validate(notice)
     return out
