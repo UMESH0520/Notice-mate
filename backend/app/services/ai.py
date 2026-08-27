@@ -360,11 +360,8 @@ def analyze_notice(
         client = _get_client()
         if client is not None:
             try:
-                if images:
-                    data = _vision_json(client, prompts.vision_extraction_prompt(), images)
-                else:
-                    safe_text = neutralize_for_prompt(effective_text)
-                    data = _chat_json(client, prompts.extraction_prompt(safe_text, _page_note(effective_text)))
+                safe_text = neutralize_for_prompt(effective_text)
+                data = _chat_json(client, prompts.extraction_prompt(safe_text, _page_note(effective_text)))
                 if data and isinstance(data, dict) and data.get("title"):
                     ai_analysis = NoticeAnalysisSchema(**data)
                     _record(MODE_OPENAI)
